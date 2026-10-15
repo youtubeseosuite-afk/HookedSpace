@@ -1,18 +1,28 @@
 // src/app/feed/page.tsx
-// NY FIL. Midlertidig feed-side til at teste login. Erstattes af det rigtige feed senere.
+// OPDATERET. Midlertidig feed-side. Sender nu brugere uden færdig profil til /velkommen.
 
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function FeedPage() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const email = data?.claims?.email as string | undefined;
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+  if (!userId) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, username, onboarded")
+    .eq("id", userId)
+    .single();
+
+  if (!profile?.onboarded) redirect("/velkommen");
 
   return (
     <main className="mx-auto max-w-xl px-4 py-12">
       <h1 className="text-2xl font-bold text-deep-900">Feed</h1>
       <p className="mt-2 text-deep-700">
-        Du er logget ind som <strong>{email ?? "ukendt"}</strong>.
+        Hej <strong>{profile.display_name}</strong> (@{profile.username}). Feedet kommer snart.
       </p>
       <form action="/auth/signout" method="post" className="mt-6">
         <button
