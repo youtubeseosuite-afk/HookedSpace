@@ -1,5 +1,5 @@
 // src/lib/image.ts
-// NY FIL. Formindsker billeder i browseren før upload (max 1600 px, WebP/JPEG).
+// OPDATERET (valgfri maxSize, fx 400 px til profilbilleder). Formindsker billeder i browseren før upload (standard 1600 px, WebP/JPEG).
 // Billedet tegnes om på et canvas, så ALLE metadata (inkl. GPS-position) forsvinder.
 
 export type CompressedImage = {
@@ -9,17 +9,17 @@ export type CompressedImage = {
   ext: "webp" | "jpg";
 };
 
-const MAX_SIZE = 1600;
+const DEFAULT_MAX_SIZE = 1600;
 
 function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 }
 
-export async function compressImage(file: File): Promise<CompressedImage> {
+export async function compressImage(file: File, maxSize = DEFAULT_MAX_SIZE): Promise<CompressedImage> {
   // imageOrientation retter billeder der er taget på højkant
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
 
-  const scale = Math.min(1, MAX_SIZE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);
 
