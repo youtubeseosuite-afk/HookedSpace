@@ -1,11 +1,11 @@
 // src/lib/supabase/proxy.ts
-// NY FIL. Holder login-sessionen frisk ved hver forespørgsel og sender ikke-loggede brugere til /login.
+// OPDATERET (/privatliv er nu offentlig). Holder login-sessionen frisk ved hver forespørgsel og sender ikke-loggede brugere til /login.
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Sider man kan se uden at være logget ind
-const PUBLIC_PATHS = ["/", "/login", "/auth"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/privatliv"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || (p !== "/" && pathname.startsWith(p + "/")));
