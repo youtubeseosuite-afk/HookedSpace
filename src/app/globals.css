@@ -1,0 +1,30 @@
+/* src/app/globals.css
+   NY FIL. Global styling: Tailwind v4 og HookedSpace-farver (dybt vand, siv og fluegul). */
+
+@import "tailwindcss";
+
+@theme {
+  --color-deep-950: #06141b;
+  --color-deep-900: #0b2230;
+  --color-deep-800: #12344a;
+  --color-deep-700: #1b4a66;
+  --color-reed-500: #5f8b6e;
+  --color-reed-300: #a9c6ac;
+  --color-lure-400: #f2b84b;
+  --color-lure-500: #e09a1f;
+  --color-mist-50: #f4f7f6;
+  --color-mist-100: #e6ecea;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  background-color: var(--color-mist-50);
+  color: var(--color-deep-950);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
