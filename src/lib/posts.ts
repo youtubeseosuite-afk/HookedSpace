@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// NY FIL. Henter opslag til feedet (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (ny getPosts() til profil og trofævæg). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { createClient } from "@/lib/supabase/server";
@@ -52,27 +52,41 @@ function mapPost(p: RawPost): FeedPost {
 }
 
 // before = ISO-tidspunkt. Henter opslag ældre end dette (til "Vis ældre").
-export async function getFeedPosts(before?: string) {
+type GetPostsOptions = {
+  before?: string;
+  userId?: string;
+  trophiesOnly?: boolean;
+  limit?: number;
+};
+
+// Fælles hentning til feed, profil og trofævæg
+export async function getPosts({ before, userId, trophiesOnly, limit = FEED_PAGE_SIZE }: GetPostsOptions = {}) {
   const supabase = await createClient();
 
   let query = supabase
     .from("posts")
     .select(POST_SELECT)
     .order("created_at", { ascending: false })
-    .limit(FEED_PAGE_SIZE + 1);
+    .limit(limit + 1);
 
   if (before) query = query.lt("created_at", before);
+  if (userId) query = query.eq("user_id", userId);
+  if (trophiesOnly) query = query.eq("is_trophy", true);
 
   const { data, error } = await query;
   if (error) {
-    console.error("getFeedPosts", error);
+    console.error("getPosts", error);
     return { posts: [] as FeedPost[], nextCursor: null as string | null };
   }
 
   const rows = (data ?? []) as unknown as RawPost[];
-  const hasMore = rows.length > FEED_PAGE_SIZE;
-  const posts = rows.slice(0, FEED_PAGE_SIZE).map(mapPost);
+  const hasMore = rows.length > limit;
+  const posts = rows.slice(0, limit).map(mapPost);
   const nextCursor = hasMore ? posts[posts.length - 1].created_at : null;
 
   return { posts, nextCursor };
+}
+
+export async function getFeedPosts(before?: string) {
+  return getPosts({ before });
 }
