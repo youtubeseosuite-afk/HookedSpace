@@ -1,5 +1,5 @@
 // src/components/app-shell.tsx
-// NY FIL. App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
+// OPDATERET ("Ny fangst" → "Ny Post", sti /post/ny). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
 
 "use client";
 
@@ -38,7 +38,7 @@ export default function AppShell({
 
   const nav: NavItem[] = [
     { href: "/feed", label: "Feed", icon: Home },
-    { href: "/fangst/ny", label: "Ny fangst", icon: PlusCircle },
+    { href: "/post/ny", label: "Ny Post", icon: PlusCircle },
     { href: "/opdag", label: "Find fiskere", icon: Search },
     { href: `/u/${username}`, label: "Min profil", icon: User },
     { href: "/indstillinger", label: "Indstillinger", icon: Settings },
