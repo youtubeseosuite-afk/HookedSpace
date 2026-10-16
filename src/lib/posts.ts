@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// OPDATERET (henter is_pr og is_new_species til "Ny PR!" og "Ny art!"). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (grupper: opslag viser gruppen, gruppesiden kan hente gruppens opslag, feedet viser kun opslag fra dine egne grupper). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { cache } from "react";
@@ -30,6 +30,8 @@ export type FeedPost = {
   shared_post_id: string | null;
   // Originalen, hvis dette er en deling. null hvis den er slettet eller ikke længere må ses.
   shared: FeedPost | null;
+  // Gruppen opslaget er skrevet i (null = almindeligt opslag)
+  group: { slug: string; name: string; privacy: "public" | "private" } | null;
 };
 
 export const FEED_PAGE_SIZE = 10;
@@ -42,7 +44,8 @@ const POST_SELECT = `
   post_images ( storage_path, width, height, position ),
   post_tags ( tagged:profiles!post_tags_tagged_user_id_fkey ( id, username, display_name ) ),
   post_reactions ( count ),
-  post_comments ( count )
+  post_comments ( count ),
+  group:groups!posts_group_id_fkey ( slug, name, privacy )
 `;
 
 export function postImageUrl(path: string) {
@@ -78,6 +81,9 @@ function mapPost(p: RawPost, viewerId: string | null, myReactions: Set<string>):
 // before = ISO-tidspunkt. Henter opslag ældre end dette (til "Vis ældre").
 type GetPostsOptions = {
   id?: string;
+  groupId?: string;
+  // Feed: kun gruppeopslag fra disse grupper (opslag uden gruppe vises altid)
+  feedGroupIds?: string[];
   before?: string;
   userId?: string;
   trophiesOnly?: boolean;
@@ -85,7 +91,15 @@ type GetPostsOptions = {
 };
 
 // Fælles hentning til feed, profil og trofævæg
-export async function getPosts({ id, before, userId, trophiesOnly, limit = FEED_PAGE_SIZE }: GetPostsOptions = {}) {
+export async function getPosts({
+  id,
+  groupId,
+  feedGroupIds,
+  before,
+  userId,
+  trophiesOnly,
+  limit = FEED_PAGE_SIZE,
+}: GetPostsOptions = {}) {
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const viewerId = (claimsData?.claims?.sub as string | undefined) ?? null;
@@ -97,6 +111,13 @@ export async function getPosts({ id, before, userId, trophiesOnly, limit = FEED_
     .limit(limit + 1);
 
   if (id) query = query.eq("id", id);
+  if (groupId) query = query.eq("group_id", groupId);
+  if (feedGroupIds) {
+    query =
+      feedGroupIds.length > 0
+        ? query.or(`group_id.is.null,group_id.in.(${feedGroupIds.join(",")})`)
+        : query.is("group_id", null);
+  }
   if (before) query = query.lt("created_at", before);
   if (userId) query = query.eq("user_id", userId);
   if (trophiesOnly) query = query.eq("is_trophy", true);
@@ -141,8 +162,21 @@ export async function getPosts({ id, before, userId, trophiesOnly, limit = FEED_
   return { posts, nextCursor };
 }
 
+// Feedet: almindelige opslag + opslag fra de grupper, du er medlem af
 export async function getFeedPosts(before?: string) {
-  return getPosts({ before });
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const viewerId = claimsData?.claims?.sub as string | undefined;
+  let feedGroupIds: string[] = [];
+  if (viewerId) {
+    const { data } = await supabase
+      .from("group_members")
+      .select("group_id")
+      .eq("user_id", viewerId)
+      .eq("status", "active");
+    feedGroupIds = (data ?? []).map((r) => r.group_id);
+  }
+  return getPosts({ before, feedGroupIds });
 }
 
 // Ét opslag. Returnerer null hvis det ikke findes, eller hvis brugeren ikke må se det.
