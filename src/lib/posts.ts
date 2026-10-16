@@ -1,7 +1,8 @@
 // src/lib/posts.ts
-// OPDATERET (antal reaktioner og kommentarer, om jeg har reageret, og hvem der kigger). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (ny getPostById() til delingssiden /p/[id]). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type FeedPost = {
@@ -68,6 +69,7 @@ function mapPost(p: RawPost, viewerId: string | null, myReactions: Set<string>):
 
 // before = ISO-tidspunkt. Henter opslag ældre end dette (til "Vis ældre").
 type GetPostsOptions = {
+  id?: string;
   before?: string;
   userId?: string;
   trophiesOnly?: boolean;
@@ -75,7 +77,7 @@ type GetPostsOptions = {
 };
 
 // Fælles hentning til feed, profil og trofævæg
-export async function getPosts({ before, userId, trophiesOnly, limit = FEED_PAGE_SIZE }: GetPostsOptions = {}) {
+export async function getPosts({ id, before, userId, trophiesOnly, limit = FEED_PAGE_SIZE }: GetPostsOptions = {}) {
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const viewerId = (claimsData?.claims?.sub as string | undefined) ?? null;
@@ -86,6 +88,7 @@ export async function getPosts({ before, userId, trophiesOnly, limit = FEED_PAGE
     .order("created_at", { ascending: false })
     .limit(limit + 1);
 
+  if (id) query = query.eq("id", id);
   if (before) query = query.lt("created_at", before);
   if (userId) query = query.eq("user_id", userId);
   if (trophiesOnly) query = query.eq("is_trophy", true);
@@ -120,3 +123,11 @@ export async function getPosts({ before, userId, trophiesOnly, limit = FEED_PAGE
 export async function getFeedPosts(before?: string) {
   return getPosts({ before });
 }
+
+// Ét opslag. Returnerer null hvis det ikke findes, eller hvis brugeren ikke må se det.
+// cache() gør, at siden og dens metadata deler samme hentning.
+export const getPostById = cache(async (id: string) => {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { posts } = await getPosts({ id, limit: 1 });
+  return posts[0] ?? null;
+});
