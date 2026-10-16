@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// OPDATERET (ny getPostById() til delingssiden /p/[id]). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (delte opslag: henter originalen med). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { cache } from "react";
@@ -24,12 +24,17 @@ export type FeedPost = {
   comment_count: number;
   reacted_by_me: boolean;
   viewer_id: string | null;
+  is_share: boolean;
+  shared_post_id: string | null;
+  // Originalen, hvis dette er en deling. null hvis den er slettet eller ikke længere må ses.
+  shared: FeedPost | null;
 };
 
 export const FEED_PAGE_SIZE = 10;
 
 const POST_SELECT = `
   id, body, feeling, location_name, visibility, weight_kg, length_cm, released, is_trophy, created_at,
+  is_share, shared_post_id,
   author:profiles!posts_user_id_fkey ( id, username, display_name, avatar_url ),
   species ( name ),
   post_images ( storage_path, width, height, position ),
@@ -44,7 +49,7 @@ export function postImageUrl(path: string) {
 
 type RawPost = Omit<
   FeedPost,
-  "images" | "tagged" | "reaction_count" | "comment_count" | "reacted_by_me" | "viewer_id"
+  "images" | "tagged" | "reaction_count" | "comment_count" | "reacted_by_me" | "viewer_id" | "shared"
 > & {
   post_images: { storage_path: string; width: number | null; height: number | null; position: number }[] | null;
   post_tags: { tagged: FeedPost["tagged"][number] | null }[] | null;
@@ -64,6 +69,7 @@ function mapPost(p: RawPost, viewerId: string | null, myReactions: Set<string>):
     comment_count: post_comments?.[0]?.count ?? 0,
     reacted_by_me: myReactions.has(p.id),
     viewer_id: viewerId,
+    shared: null,
   };
 }
 
@@ -115,6 +121,19 @@ export async function getPosts({ id, before, userId, trophiesOnly, limit = FEED_
   }
 
   const posts = pageRows.map((r) => mapPost(r, viewerId, myReactions));
+
+  // Hent originalerne til delte opslag. RLS sørger for, at man kun får dem, man må se.
+  const originalIds = [...new Set(posts.map((p) => p.shared_post_id).filter((x): x is string => !!x))];
+  if (originalIds.length > 0) {
+    const { data: originals } = await supabase.from("posts").select(POST_SELECT).in("id", originalIds);
+    const byId = new Map(
+      ((originals ?? []) as unknown as RawPost[]).map((o) => [o.id, mapPost(o, viewerId, new Set())])
+    );
+    for (const p of posts) {
+      if (p.shared_post_id) p.shared = byId.get(p.shared_post_id) ?? null;
+    }
+  }
+
   const nextCursor = hasMore ? posts[posts.length - 1].created_at : null;
 
   return { posts, nextCursor };
