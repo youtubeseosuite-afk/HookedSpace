@@ -1,14 +1,17 @@
 // src/components/app-shell.tsx
-// OPDATERET ("Ny fangst" → "Ny Post", sti /post/ny). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
+// OPDATERET (Notifikationer i menuen med tal for ulæste, klokke i mobilens topbar). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fish, Home, PlusCircle, Search, User, Settings, LogOut, Menu, X, type LucideIcon } from "lucide-react";
+import { Fish, Home, PlusCircle, Search, User, Settings, LogOut, Menu, X, Bell, type LucideIcon } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
+type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
+
+const NOTIFICATIONS_PATH = "/notifikationer";
 
 function Avatar({ name, url }: { name: string; url: string | null }) {
   if (url) {
@@ -18,6 +21,17 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   return (
     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-reed-500 text-sm font-semibold text-white">
       {name.charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
+function Badge({ count, className = "" }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-lure-400 px-1.5 text-[11px] font-bold leading-none text-deep-950 ${className}`}
+    >
+      {count > 99 ? "99+" : count}
     </span>
   );
 }
@@ -35,10 +49,42 @@ export default function AppShell({
 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+
+  // Henter antal ulæste notifikationer (RLS giver kun dine egne)
+  const refreshUnread = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .is("read_at", null);
+      if (!error) setUnread(count ?? 0);
+    } catch {
+      // Ingen forbindelse lige nu – behold det sidste tal
+    }
+  }, []);
+
+  // Ved sideskift, hvert minut og når fanen bliver aktiv igen
+  useEffect(() => {
+    if (pathname === NOTIFICATIONS_PATH) {
+      setUnread(0);
+      return;
+    }
+    refreshUnread();
+    const interval = setInterval(refreshUnread, 60_000);
+    const onVisible = () => document.visibilityState === "visible" && refreshUnread();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [pathname, refreshUnread]);
 
   const nav: NavItem[] = [
     { href: "/feed", label: "Feed", icon: Home },
     { href: "/post/ny", label: "Ny Post", icon: PlusCircle },
+    { href: NOTIFICATIONS_PATH, label: "Notifikationer", icon: Bell, badge: unread },
     { href: "/opdag", label: "Find fiskere", icon: Search },
     { href: `/u/${username}`, label: "Min profil", icon: User },
     { href: "/indstillinger", label: "Indstillinger", icon: Settings },
@@ -62,21 +108,31 @@ export default function AppShell({
             </span>
             HookedSpace
           </Link>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-menu"
-            aria-label={menuOpen ? "Luk menu" : "Åbn menu"}
-            className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-deep-800"
-          >
-            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="flex items-center gap-1">
+            <Link
+              href={NOTIFICATIONS_PATH}
+              aria-label={unread > 0 ? `Notifikationer, ${unread} ulæste` : "Notifikationer"}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg hover:bg-deep-800"
+            >
+              <Bell className="h-6 w-6" />
+              <Badge count={unread} className="absolute -right-0.5 -top-0.5" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              aria-label={menuOpen ? "Luk menu" : "Åbn menu"}
+              className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-deep-800"
+            >
+              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {menuOpen && (
           <nav id="mobile-menu" className="border-t border-deep-800 px-2 pb-3 pt-2">
-            {nav.map(({ href, label, icon: Icon }) => (
+            {nav.map(({ href, label, icon: Icon, badge }) => (
               <Link
                 key={href}
                 href={href}
@@ -86,6 +142,7 @@ export default function AppShell({
               >
                 <Icon className="h-5 w-5" aria-hidden />
                 {label}
+                <Badge count={badge ?? 0} className="ml-auto" />
               </Link>
             ))}
             <form action="/auth/signout" method="post">
@@ -116,7 +173,7 @@ export default function AppShell({
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1 px-2 py-2">
-          {nav.map(({ href, label, icon: Icon }) => (
+          {nav.map(({ href, label, icon: Icon, badge }) => (
             <Link
               key={href}
               href={href}
@@ -125,10 +182,14 @@ export default function AppShell({
                 isActive(href) ? "bg-deep-800 text-lure-400" : "text-mist-100 hover:bg-deep-800"
               }`}
             >
-              <Icon className="h-6 w-6 shrink-0 group-hover:hidden" aria-hidden />
+              <span className="relative group-hover:hidden">
+                <Icon className="h-6 w-6 shrink-0" aria-hidden />
+                <Badge count={badge ?? 0} className="absolute -right-2.5 -top-2" />
+              </span>
               <span className="sr-only whitespace-nowrap text-sm font-medium group-hover:not-sr-only">
                 {label}
               </span>
+              <Badge count={badge ?? 0} className="ml-auto hidden group-hover:flex" />
             </Link>
           ))}
         </nav>
