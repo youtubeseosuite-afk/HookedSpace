@@ -1,5 +1,6 @@
 // src/app/(app)/u/[username]/page.tsx
-// OPDATERET (badges og fiskepas). Profilside: navn, by, erfaring, bio, tællere, følg-knap, badges, fiskepas, trofævæg og brugerens opslag.
+// OPDATERET (faner: Opslag og Billeder, med billedgalleri). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
+// fanen Opslag (badges, fiskepas, trofævæg, opslag) og fanen Billeder (galleri med alle brugerens billeder).
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -12,6 +13,8 @@ import PostCard from "@/components/post-card";
 import FollowButton from "./follow-button";
 import FishingPass, { type SpeciesItem, type SpeciesStat } from "@/components/fishing-pass";
 import BadgeList, { type BadgeItem } from "@/components/badge-list";
+import PhotoGallery, { type GalleryImage } from "@/components/photo-gallery";
+import { postImageUrl } from "@/lib/posts";
 
 const LEVEL_LABEL: Record<string, string> = {
   begynder: "Begynder",
@@ -21,6 +24,8 @@ const LEVEL_LABEL: Record<string, string> = {
 };
 
 type Params = { username: string };
+
+const GALLERY_PAGE = 30;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { username } = await params;
@@ -70,12 +75,14 @@ export default async function ProfilePage({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<{ foer?: string }>;
+  searchParams: Promise<{ foer?: string; fane?: string }>;
 }) {
   const me = await requireProfile();
   const { username } = await params;
-  const { foer } = await searchParams;
+  const { foer, fane } = await searchParams;
   const before = foer && !Number.isNaN(Date.parse(foer)) ? foer : undefined;
+  const tab: "opslag" | "billeder" = fane === "billeder" ? "billeder" : "opslag";
+  const showExtras = tab === "opslag" && !before;
 
   const supabase = await createClient();
   const { data: user } = await supabase
@@ -101,22 +108,63 @@ export default async function ProfilePage({
     statsRes,
     allBadgesRes,
     userBadgesRes,
+    imageCountRes,
+    galleryRes,
   ] = await Promise.all([
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
     supabase.from("follows").select("follower_id").eq("follower_id", me.id).eq("following_id", user.id).maybeSingle(),
     supabase.from("follows").select("follower_id").eq("follower_id", user.id).eq("following_id", me.id).maybeSingle(),
-    before ? Promise.resolve(null) : getPosts({ userId: user.id, trophiesOnly: true, limit: 9 }),
-    getPosts({ userId: user.id, before }),
-    supabase.from("species").select("id, name, water_type").order("name"),
-    supabase
-      .from("user_species_stats")
-      .select("species_id, catches, best_weight_kg, best_length_cm")
-      .eq("user_id", user.id),
-    supabase.from("badges").select("id, name, description, emoji, category, sort").order("sort"),
-    supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
+    showExtras ? getPosts({ userId: user.id, trophiesOnly: true, limit: 9 }) : Promise.resolve(null),
+    tab === "opslag" ? getPosts({ userId: user.id, before }) : Promise.resolve(null),
+    showExtras ? supabase.from("species").select("id, name, water_type").order("name") : Promise.resolve(null),
+    showExtras
+      ? supabase
+          .from("user_species_stats")
+          .select("species_id, catches, best_weight_kg, best_length_cm")
+          .eq("user_id", user.id)
+      : Promise.resolve(null),
+    showExtras
+      ? supabase.from("badges").select("id, name, description, emoji, category, sort").order("sort")
+      : Promise.resolve(null),
+    showExtras ? supabase.from("user_badges").select("badge_id").eq("user_id", user.id) : Promise.resolve(null),
+    // Antal billeder du må se (RLS skjuler billeder fra opslag, du ikke har adgang til)
+    supabase.from("post_images").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    tab === "billeder"
+      ? (() => {
+          let q = supabase
+            .from("post_images")
+            .select("storage_path, width, height, post_id, created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(GALLERY_PAGE + 1);
+          if (before) q = q.lt("created_at", before);
+          return q;
+        })()
+      : Promise.resolve(null),
   ]);
+
+  // Galleri
+  const galleryRows = (galleryRes?.data ?? []) as {
+    storage_path: string;
+    width: number | null;
+    height: number | null;
+    post_id: string;
+    created_at: string;
+  }[];
+  const galleryHasMore = galleryRows.length > GALLERY_PAGE;
+  const galleryPage = galleryRows.slice(0, GALLERY_PAGE);
+  const galleryImages: GalleryImage[] = galleryPage.map((r) => ({
+    url: postImageUrl(r.storage_path),
+    postId: r.post_id,
+    width: r.width,
+    height: r.height,
+  }));
+  const galleryNext = galleryHasMore
+    ? `/u/${user.username}?fane=billeder&foer=${encodeURIComponent(galleryPage[galleryPage.length - 1].created_at)}`
+    : null;
+  const imageCount = imageCountRes.count ?? 0;
 
   const iFollow = !!iFollowRes.data;
   const followsMe = !!followsMeRes.data;
@@ -190,16 +238,52 @@ export default async function ProfilePage({
         </div>
       </section>
 
-      {!before && (
+      {/* Faner */}
+      <nav className="flex gap-1 rounded-xl bg-white p-1 shadow-sm ring-1 ring-mist-100" aria-label="Profil">
+        {(
+          [
+            { key: "opslag", label: "Opslag", href: `/u/${user.username}` },
+            { key: "billeder", label: "Billeder", href: `/u/${user.username}?fane=billeder`, count: imageCount },
+          ] as const
+        ).map((t) => (
+          <Link
+            key={t.key}
+            href={t.href}
+            aria-current={tab === t.key ? "page" : undefined}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition ${
+              tab === t.key ? "bg-deep-900 text-mist-50" : "text-deep-700 hover:bg-mist-50"
+            }`}
+          >
+            {t.label}
+            {"count" in t && (
+              <span
+                className={`rounded-full px-1.5 text-xs ${tab === t.key ? "bg-deep-800 text-lure-400" : "bg-mist-100 text-deep-700"}`}
+              >
+                {t.count}
+              </span>
+            )}
+          </Link>
+        ))}
+      </nav>
+
+      {tab === "billeder" && (
+        <PhotoGallery
+          images={galleryImages}
+          nextHref={galleryNext}
+          emptyText={isMe ? "Du har ikke delt nogen billeder endnu." : `${name} har ikke delt nogen billeder, du kan se.`}
+        />
+      )}
+
+      {showExtras && (
         <>
           <BadgeList
-            allBadges={(allBadgesRes.data ?? []) as BadgeItem[]}
-            earnedIds={(userBadgesRes.data ?? []).map((b) => b.badge_id)}
+            allBadges={(allBadgesRes?.data ?? []) as BadgeItem[]}
+            earnedIds={(userBadgesRes?.data ?? []).map((b) => b.badge_id)}
             isMe={isMe}
           />
           <FishingPass
-            species={(speciesRes.data ?? []) as SpeciesItem[]}
-            stats={(statsRes.data ?? []) as SpeciesStat[]}
+            species={(speciesRes?.data ?? []) as SpeciesItem[]}
+            stats={(statsRes?.data ?? []) as SpeciesStat[]}
             isMe={isMe}
           />
         </>
@@ -208,17 +292,17 @@ export default async function ProfilePage({
       {trophiesRes && <TrophyWall trophies={trophiesRes.posts} />}
 
       {/* Opslag */}
-      {postsRes.posts.length === 0 && !before && (
+      {postsRes && postsRes.posts.length === 0 && !before && (
         <div className="rounded-2xl bg-white p-8 text-center text-sm text-deep-700 shadow-sm ring-1 ring-mist-100">
           {isMe ? "Du har ikke delt noget endnu." : `${name} har ikke delt noget, du kan se.`}
         </div>
       )}
 
-      {postsRes.posts.map((post) => (
+      {postsRes?.posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}
 
-      {postsRes.nextCursor && (
+      {postsRes?.nextCursor && (
         <div className="flex justify-center pt-2">
           <Link
             href={`/u/${user.username}?foer=${encodeURIComponent(postsRes.nextCursor)}`}
