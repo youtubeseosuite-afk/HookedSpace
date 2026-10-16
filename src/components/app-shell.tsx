@@ -1,12 +1,12 @@
 // src/components/app-shell.tsx
-// OPDATERET (Notifikationer i menuen med tal for ulæste, klokke i mobilens topbar). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
+// OPDATERET (nyt menupunkt: Grupper). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
 
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fish, Home, PlusCircle, Search, User, Settings, LogOut, Menu, X, Bell, type LucideIcon } from "lucide-react";
+import { Fish, Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
@@ -85,12 +85,14 @@ export default function AppShell({
     { href: "/feed", label: "Feed", icon: Home },
     { href: "/post/ny", label: "Ny Post", icon: PlusCircle },
     { href: NOTIFICATIONS_PATH, label: "Notifikationer", icon: Bell, badge: unread },
+    { href: "/grupper", label: "Grupper", icon: Users },
     { href: "/opdag", label: "Find fiskere", icon: Search },
     { href: `/u/${username}`, label: "Min profil", icon: User },
     { href: "/indstillinger", label: "Indstillinger", icon: Settings },
   ];
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/") || (href === "/grupper" && pathname.startsWith("/g/"));
 
   // Luk mobilmenuen når man skifter side
   useEffect(() => {
