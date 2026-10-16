@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// OPDATERET (grupper: opslag viser gruppen, gruppesiden kan hente gruppens opslag, feedet viser kun opslag fra dine egne grupper). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (rangeret feed "Anbefalet" via ranked_feed i databasen, med begrundelse og variation). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { cache } from "react";
@@ -32,6 +32,8 @@ export type FeedPost = {
   shared: FeedPost | null;
   // Gruppen opslaget er skrevet i (null = almindeligt opslag)
   group: { slug: string; name: string; privacy: "public" | "private" } | null;
+  // Hvorfor opslaget vises i det anbefalede feed (friend, following, group, local, region, tagged)
+  reason?: string | null;
 };
 
 export const FEED_PAGE_SIZE = 10;
@@ -81,6 +83,7 @@ function mapPost(p: RawPost, viewerId: string | null, myReactions: Set<string>):
 // before = ISO-tidspunkt. Henter opslag ældre end dette (til "Vis ældre").
 type GetPostsOptions = {
   id?: string;
+  ids?: string[];
   groupId?: string;
   // Feed: kun gruppeopslag fra disse grupper (opslag uden gruppe vises altid)
   feedGroupIds?: string[];
@@ -93,6 +96,7 @@ type GetPostsOptions = {
 // Fælles hentning til feed, profil og trofævæg
 export async function getPosts({
   id,
+  ids,
   groupId,
   feedGroupIds,
   before,
@@ -111,6 +115,7 @@ export async function getPosts({
     .limit(limit + 1);
 
   if (id) query = query.eq("id", id);
+  if (ids) query = query.in("id", ids.length > 0 ? ids : ["00000000-0000-0000-0000-000000000000"]);
   if (groupId) query = query.eq("group_id", groupId);
   if (feedGroupIds) {
     query =
@@ -186,3 +191,43 @@ export const getPostById = cache(async (id: string) => {
   const { posts } = await getPosts({ id, limit: 1 });
   return posts[0] ?? null;
 });
+
+// Undgå at den samme person står flere gange lige efter hinanden
+function diversify(posts: FeedPost[]) {
+  const pool = [...posts];
+  const out: FeedPost[] = [];
+  while (pool.length > 0) {
+    const last = out[out.length - 1]?.author.id;
+    const idx = pool.findIndex((p) => p.author.id !== last);
+    out.push(pool.splice(idx === -1 ? 0 : idx, 1)[0]);
+  }
+  return out;
+}
+
+// "Anbefalet": opslag sorteret efter relation, område, aktivitet og alder (se supabase/012_feed_ranking.sql)
+export async function getRankedFeed(page: number) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("ranked_feed", {
+    p_limit: FEED_PAGE_SIZE + 1,
+    p_offset: page * FEED_PAGE_SIZE,
+  });
+  if (error || !data) {
+    if (error) console.error("getRankedFeed", error);
+    return { posts: [] as FeedPost[], hasMore: false };
+  }
+
+  const rows = data as { post_id: string; score: number; reason: string | null }[];
+  const hasMore = rows.length > FEED_PAGE_SIZE;
+  const pageRows = rows.slice(0, FEED_PAGE_SIZE);
+  if (pageRows.length === 0) return { posts: [] as FeedPost[], hasMore: false };
+
+  const { posts } = await getPosts({ ids: pageRows.map((r) => r.post_id), limit: FEED_PAGE_SIZE });
+  const byId = new Map(posts.map((p) => [p.id, p]));
+  const ordered: FeedPost[] = [];
+  for (const r of pageRows) {
+    const p = byId.get(r.post_id);
+    if (p) ordered.push({ ...p, reason: r.reason });
+  }
+
+  return { posts: diversify(ordered), hasMore };
+}
