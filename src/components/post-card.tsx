@@ -1,8 +1,8 @@
 // src/components/post-card.tsx
-// OPDATERET (••• menu med "Slet opslag" på egne opslag). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
+// OPDATERET (viser gruppen opslaget er skrevet i; opslag fra private grupper kan ikke deles). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
-import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2 } from "lucide-react";
+import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2, ChevronRight } from "lucide-react";
 import type { FeedPost } from "@/lib/posts";
 import { getFeeling } from "@/lib/feelings";
 import PostActions from "@/components/post-actions";
@@ -97,7 +97,13 @@ function PostHeader({
 }) {
   const name = post.author.display_name ?? post.author.username;
   const feeling = getFeeling(post.feeling);
-  const VisIcon = VIS_ICON[post.visibility];
+  // Gruppeopslag: synlighed følger gruppen
+  const VisIcon = post.group ? (post.group.privacy === "private" ? Lock : Globe) : VIS_ICON[post.visibility];
+  const visLabel = post.group
+    ? post.group.privacy === "private"
+      ? "Privat gruppe"
+      : "Offentlig gruppe"
+    : VIS_LABEL[post.visibility];
 
   return (
     <header className={`flex gap-3 ${small ? "p-3" : "p-4"}`}>
@@ -109,6 +115,14 @@ function PostHeader({
           <Link href={`/u/${post.author.username}`} className="font-semibold text-deep-950 hover:underline">
             {name}
           </Link>
+          {post.group && (
+            <>
+              <ChevronRight className="mx-0.5 inline h-3.5 w-3.5 align-[-2px] text-deep-700" aria-label="i gruppen" />
+              <Link href={`/g/${post.group.slug}`} className="font-semibold text-deep-950 hover:underline">
+                {post.group.name}
+              </Link>
+            </>
+          )}
           {sharedLabel && <> delte et opslag</>}
           {feeling && (
             <>
@@ -134,7 +148,7 @@ function PostHeader({
             <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
           </Link>
           <span aria-hidden>·</span>
-          <VisIcon className="h-3.5 w-3.5" aria-label={VIS_LABEL[post.visibility]} />
+          <VisIcon className="h-3.5 w-3.5" aria-label={visLabel} />
           {post.location_name && (
             <>
               <span aria-hidden>·</span>
@@ -192,7 +206,10 @@ function PostBody({ post, small = false }: { post: FeedPost; small?: boolean }) 
 export default function PostCard({ post }: { post: FeedPost }) {
   const original = post.is_share ? post.shared : null;
   const missingOriginal = post.is_share && !original;
-  const shareable = post.visibility === "public" && !missingOriginal;
+  const shareable =
+    !missingOriginal &&
+    (post.group ? post.group.privacy === "public" : post.visibility === "public") &&
+    (!original?.group || original.group.privacy === "public");
   // Når man deler en deling, deles originalen
   const shareTargetId = original ? original.id : post.id;
   const menu = post.viewer_id && post.viewer_id === post.author.id ? <PostMenu postId={post.id} /> : null;
