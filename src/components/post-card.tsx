@@ -1,11 +1,12 @@
 // src/components/post-card.tsx
-// OPDATERET (mærkerne "Ny PR!" og "Ny art!" på fangster). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
+// OPDATERET (••• menu med "Slet opslag" på egne opslag). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2 } from "lucide-react";
 import type { FeedPost } from "@/lib/posts";
 import { getFeeling } from "@/lib/feelings";
 import PostActions from "@/components/post-actions";
+import PostMenu from "@/components/post-menu";
 
 function Avatar({ name, url, small = false }: { name: string; url: string | null; small?: boolean }) {
   const size = small ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm";
@@ -83,7 +84,17 @@ function ImageGrid({ images }: { images: FeedPost["images"] }) {
 }
 
 // Hoved: avatar, navn, følelse, taggede, tidspunkt, synlighed og sted
-function PostHeader({ post, small = false, sharedLabel = false }: { post: FeedPost; small?: boolean; sharedLabel?: boolean }) {
+function PostHeader({
+  post,
+  small = false,
+  sharedLabel = false,
+  menu,
+}: {
+  post: FeedPost;
+  small?: boolean;
+  sharedLabel?: boolean;
+  menu?: React.ReactNode;
+}) {
   const name = post.author.display_name ?? post.author.username;
   const feeling = getFeeling(post.feeling);
   const VisIcon = VIS_ICON[post.visibility];
@@ -133,6 +144,7 @@ function PostHeader({ post, small = false, sharedLabel = false }: { post: FeedPo
           )}
         </p>
       </div>
+      {menu}
     </header>
   );
 }
@@ -183,12 +195,13 @@ export default function PostCard({ post }: { post: FeedPost }) {
   const shareable = post.visibility === "public" && !missingOriginal;
   // Når man deler en deling, deles originalen
   const shareTargetId = original ? original.id : post.id;
+  const menu = post.viewer_id && post.viewer_id === post.author.id ? <PostMenu postId={post.id} /> : null;
 
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-mist-100">
       {post.is_share ? (
         <>
-          <PostHeader post={post} sharedLabel />
+          <PostHeader post={post} sharedLabel menu={menu} />
           {post.body && (
             <p className="whitespace-pre-wrap break-words px-4 pb-3 text-[15px] leading-relaxed text-deep-950">{post.body}</p>
           )}
@@ -208,7 +221,7 @@ export default function PostCard({ post }: { post: FeedPost }) {
         </>
       ) : (
         <>
-          <PostHeader post={post} />
+          <PostHeader post={post} menu={menu} />
           <PostBody post={post} />
         </>
       )}
