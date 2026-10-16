@@ -1,5 +1,5 @@
 // src/app/(app)/notifikationer/page.tsx
-// OPDATERET (nye badges). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
+// OPDATERET (gennemførte udfordringer). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
 // Ulæste markeres med en prik og bliver markeret som læst, når siden åbnes.
 
 import type { Metadata } from "next";
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: "Notifikationer",
 };
 
-type NotificationType = "reaction" | "comment" | "tag" | "follow" | "share" | "badge";
+type NotificationType = "reaction" | "comment" | "tag" | "follow" | "share" | "badge" | "challenge";
 
 type Row = {
   id: string;
@@ -24,9 +24,10 @@ type Row = {
   post: { body: string | null } | null;
   comment: { body: string } | null;
   badge: { name: string; emoji: string; description: string } | null;
+  challenge: { title: string; emoji: string; description: string } | null;
 };
 
-const TEXT: Record<Exclude<NotificationType, "badge">, string> = {
+const TEXT: Record<Exclude<NotificationType, "badge" | "challenge">, string> = {
   reaction: "gav dit opslag et Knæk og bræk",
   comment: "kommenterede dit opslag",
   tag: "taggede dig i et opslag",
@@ -36,6 +37,7 @@ const TEXT: Record<Exclude<NotificationType, "badge">, string> = {
 
 function hrefFor(n: Row, me: CurrentProfile) {
   if (n.type === "badge") return `/u/${me.username}`;
+  if (n.type === "challenge") return "/feed";
   if (n.type === "follow") return n.actor ? `/u/${n.actor.username}` : "#";
   return n.post_id ? `/p/${n.post_id}` : "#";
 }
@@ -70,6 +72,7 @@ function TypeIcon({ type }: { type: NotificationType }) {
         </span>
       );
     case "badge":
+    case "challenge":
       return null;
   }
 }
@@ -100,7 +103,8 @@ export default async function NotifikationerPage() {
        actor:profiles!notifications_actor_id_fkey ( username, display_name, avatar_url ),
        post:posts!notifications_post_id_fkey ( body ),
        comment:post_comments!notifications_comment_id_fkey ( body ),
-       badge:badges!notifications_badge_id_fkey ( name, emoji, description )`
+       badge:badges!notifications_badge_id_fkey ( name, emoji, description ),
+       challenge:challenges!notifications_challenge_id_fkey ( title, emoji, description )`
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -132,12 +136,15 @@ export default async function NotifikationerPage() {
             const extra =
               n.type === "badge"
                 ? n.badge?.description
+                : n.type === "challenge"
+                  ? n.challenge?.description
                 : n.type === "comment"
                   ? snippet(n.comment?.body)
                   : snippet(n.post?.body);
             const unread = !n.read_at;
 
-            if (n.type === "badge") {
+            if (n.type === "badge" || n.type === "challenge") {
+              const isChallenge = n.type === "challenge";
               return (
                 <li key={n.id}>
                   <Link
@@ -145,11 +152,14 @@ export default async function NotifikationerPage() {
                     className={`flex items-start gap-3 p-4 transition hover:bg-mist-50 ${unread ? "bg-lure-400/10" : ""}`}
                   >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-deep-900 text-2xl">
-                      {n.badge?.emoji ?? "🏅"}
+                      {(isChallenge ? n.challenge?.emoji : n.badge?.emoji) ?? "🏅"}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm text-deep-900">
-                        Nyt badge: <span className="font-semibold text-deep-950">{n.badge?.name ?? "Ukendt"}</span>
+                        {isChallenge ? "Udfordring gennemført: " : "Nyt badge: "}
+                        <span className="font-semibold text-deep-950">
+                          {(isChallenge ? n.challenge?.title : n.badge?.name) ?? "Ukendt"}
+                        </span>
                       </span>
                       {extra && <span className="mt-0.5 block truncate text-sm text-deep-700">{extra}</span>}
                       <span className={`mt-0.5 block text-xs ${unread ? "font-semibold text-lure-500" : "text-deep-700"}`}>
@@ -186,7 +196,7 @@ export default async function NotifikationerPage() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm text-deep-900">
-                      <span className="font-semibold text-deep-950">{name}</span> {TEXT[n.type as Exclude<NotificationType, "badge">]}
+                      <span className="font-semibold text-deep-950">{name}</span> {TEXT[n.type as Exclude<NotificationType, "badge" | "challenge">]}
                     </span>
                     {extra && <span className="mt-0.5 block truncate text-sm text-deep-700">&quot;{extra}&quot;</span>}
                     <span className={`mt-0.5 block text-xs ${unread ? "font-semibold text-lure-500" : "text-deep-700"}`}>
