@@ -1,5 +1,5 @@
 // src/app/(app)/u/[username]/page.tsx
-// NY FIL. Profilside: navn, by, erfaring, bio, tællere, følg-knap, trofævæg og brugerens opslag.
+// OPDATERET (badges og fiskepas). Profilside: navn, by, erfaring, bio, tællere, følg-knap, badges, fiskepas, trofævæg og brugerens opslag.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getPosts, type FeedPost } from "@/lib/posts";
 import PostCard from "@/components/post-card";
 import FollowButton from "./follow-button";
+import FishingPass, { type SpeciesItem, type SpeciesStat } from "@/components/fishing-pass";
+import BadgeList, { type BadgeItem } from "@/components/badge-list";
 
 const LEVEL_LABEL: Record<string, string> = {
   begynder: "Begynder",
@@ -87,7 +89,19 @@ export default async function ProfilePage({
   const isMe = user.id === me.id;
   const name = user.display_name ?? user.username;
 
-  const [followersRes, followingRes, postsCountRes, iFollowRes, followsMeRes, trophiesRes, postsRes] = await Promise.all([
+  const [
+    followersRes,
+    followingRes,
+    postsCountRes,
+    iFollowRes,
+    followsMeRes,
+    trophiesRes,
+    postsRes,
+    speciesRes,
+    statsRes,
+    allBadgesRes,
+    userBadgesRes,
+  ] = await Promise.all([
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
@@ -95,6 +109,13 @@ export default async function ProfilePage({
     supabase.from("follows").select("follower_id").eq("follower_id", user.id).eq("following_id", me.id).maybeSingle(),
     before ? Promise.resolve(null) : getPosts({ userId: user.id, trophiesOnly: true, limit: 9 }),
     getPosts({ userId: user.id, before }),
+    supabase.from("species").select("id, name, water_type").order("name"),
+    supabase
+      .from("user_species_stats")
+      .select("species_id, catches, best_weight_kg, best_length_cm")
+      .eq("user_id", user.id),
+    supabase.from("badges").select("id, name, description, emoji, category, sort").order("sort"),
+    supabase.from("user_badges").select("badge_id").eq("user_id", user.id),
   ]);
 
   const iFollow = !!iFollowRes.data;
@@ -168,6 +189,21 @@ export default async function ProfilePage({
           )}
         </div>
       </section>
+
+      {!before && (
+        <>
+          <BadgeList
+            allBadges={(allBadgesRes.data ?? []) as BadgeItem[]}
+            earnedIds={(userBadgesRes.data ?? []).map((b) => b.badge_id)}
+            isMe={isMe}
+          />
+          <FishingPass
+            species={(speciesRes.data ?? []) as SpeciesItem[]}
+            stats={(statsRes.data ?? []) as SpeciesStat[]}
+            isMe={isMe}
+          />
+        </>
+      )}
 
       {trophiesRes && <TrophyWall trophies={trophiesRes.posts} />}
 
