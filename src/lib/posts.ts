@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// OPDATERET (delte opslag: henter originalen med). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (henter is_pr og is_new_species til "Ny PR!" og "Ny art!"). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { cache } from "react";
@@ -15,6 +15,8 @@ export type FeedPost = {
   length_cm: number | null;
   released: boolean | null;
   is_trophy: boolean;
+  is_pr: boolean;
+  is_new_species: boolean;
   created_at: string;
   author: { id: string; username: string; display_name: string | null; avatar_url: string | null };
   species: { name: string } | null;
@@ -34,7 +36,7 @@ export const FEED_PAGE_SIZE = 10;
 
 const POST_SELECT = `
   id, body, feeling, location_name, visibility, weight_kg, length_cm, released, is_trophy, created_at,
-  is_share, shared_post_id,
+  is_share, shared_post_id, is_pr, is_new_species,
   author:profiles!posts_user_id_fkey ( id, username, display_name, avatar_url ),
   species ( name ),
   post_images ( storage_path, width, height, position ),
