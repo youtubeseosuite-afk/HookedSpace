@@ -1,5 +1,5 @@
 // src/app/(app)/post/ny/post-form.tsx
-// NY FIL. Opslagsformularen: tekst, op til 5 billeder, følelse, sted, tag venner, valgfri fangstdetaljer og synlighed.
+// OPDATERET (kan skrive opslag i en gruppe). Opslagsformularen: tekst, op til 5 billeder, følelse, sted, tag venner, valgfri fangstdetaljer og synlighed.
 
 "use client";
 
@@ -11,6 +11,7 @@ import { compressImage, type CompressedImage } from "@/lib/image";
 import { FEELINGS, getFeeling, type FeelingKey } from "@/lib/feelings";
 
 export type Species = { id: number; name: string; water_type: "salt" | "fersk" | "begge" };
+export type PostGroup = { id: string; slug: string; name: string; privacy: "public" | "private" };
 export type Friend = { id: string; username: string; display_name: string | null; avatar_url: string | null };
 
 type Panel = "feeling" | "location" | "tags" | "catch" | null;
@@ -48,12 +49,14 @@ export default function PostForm({
   avatarUrl,
   species,
   friends,
+  group = null,
 }: {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
   species: Species[];
   friends: Friend[];
+  group?: PostGroup | null;
 }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -162,7 +165,8 @@ export default function PostForm({
         body: text || null,
         feeling,
         location_name: location.trim() || null,
-        visibility,
+        visibility: group ? "public" : visibility,
+        group_id: group ? group.id : null,
         species_id: isCatch ? Number(speciesId) : null,
         weight_kg: isCatch ? parseDecimal(weight) : null,
         length_cm: isCatch ? parseDecimal(length) : null,
@@ -215,7 +219,7 @@ export default function PostForm({
       return;
     }
 
-    router.push("/feed");
+    router.push(group ? `/g/${group.slug}` : "/feed");
     router.refresh();
   }
 
@@ -248,6 +252,12 @@ export default function PostForm({
               </span>
             )}
           </p>
+          {group ? (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-md bg-deep-900 px-2 py-0.5 text-xs font-medium text-mist-50">
+              {group.privacy === "private" ? <Lock className="h-3.5 w-3.5" aria-hidden /> : <Globe className="h-3.5 w-3.5" aria-hidden />}
+              I gruppen <span className="font-semibold text-lure-400">{group.name}</span>
+            </p>
+          ) : (
           <div className="mt-1 inline-flex rounded-md bg-mist-100 p-0.5">
             {VISIBILITY.map(({ value, label, icon: Icon }) => (
               <button
@@ -263,6 +273,7 @@ export default function PostForm({
               </button>
             ))}
           </div>
+          )}
         </div>
       </div>
 
