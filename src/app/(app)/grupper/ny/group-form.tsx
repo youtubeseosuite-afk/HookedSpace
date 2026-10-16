@@ -1,5 +1,5 @@
 // src/app/(app)/grupper/ny/group-form.tsx
-// NY FIL. Formular til at oprette en gruppe: navn, adresse (slug), beskrivelse, område, offentlig/privat og regler.
+// OPDATERET (sender dig til den nye gruppes side). Formular til at oprette en gruppe: navn, adresse (slug), beskrivelse, område, offentlig/privat og regler.
 // Du bliver automatisk admin for gruppen.
 
 "use client";
@@ -121,7 +121,7 @@ export default function GroupForm({ userId }: { userId: string }) {
       }
     }
 
-    router.push("/grupper");
+    router.push(`/g/${group.slug}`);
     router.refresh();
   }
 
