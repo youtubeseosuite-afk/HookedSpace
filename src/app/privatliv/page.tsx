@@ -1,5 +1,5 @@
 // src/app/privatliv/page.tsx
-// OPDATERET (offentlige opslag kan ses uden login og deles med link). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
+// OPDATERET (man kan selv slette opslag og konto). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -124,8 +124,15 @@ export default function PrivatlivPage() {
 
           <Section title="8. Hvor længe gemmer vi dine data?">
             <p>
-              Vi gemmer dine oplysninger, så længe du har en konto. Når du beder om at få din konto slettet,
-              sletter vi din profil, dine opslag, billeder og forbindelser inden for 30 dage.
+              Vi gemmer dine oplysninger, så længe du har en konto.
+            </p>
+            <p>
+              Du kan selv slette et opslag med ••• på opslaget. Billederne og kommentarerne slettes med det samme.
+            </p>
+            <p>
+              Du kan selv slette din konto under Indstillinger. Så sletter vi med det samme din profil, dine opslag,
+              billeder, kommentarer, reaktioner, forbindelser, badges og notifikationer. Sikkerhedskopier hos vores
+              databaseudbyder slettes automatisk inden for 30 dage.
             </p>
           </Section>
 
@@ -134,7 +141,7 @@ export default function PrivatlivPage() {
             <ul className="list-disc space-y-1 pl-5">
               <li>få indsigt i de oplysninger, vi har om dig</li>
               <li>få forkerte oplysninger rettet (det meste kan du selv rette under Indstillinger)</li>
-              <li>få dine oplysninger slettet</li>
+              <li>få dine oplysninger slettet (det kan du selv gøre under Indstillinger)</li>
               <li>få dine oplysninger udleveret i et almindeligt format (dataportabilitet)</li>
               <li>gøre indsigelse mod behandlingen eller få den begrænset</li>
             </ul>
