@@ -1,5 +1,5 @@
 // src/components/post-card.tsx
-// OPDATERET (reaktioner og kommentarer nederst). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer og billeder (1–5).
+// OPDATERET (Del-knap på offentlige opslag, tidspunktet linker til opslagets egen side). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer og billeder (1–5).
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin } from "lucide-react";
@@ -118,7 +118,9 @@ export default function PostCard({ post }: { post: FeedPost }) {
             )}
           </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-deep-700">
-            <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
+            <Link href={`/p/${post.id}`} className="hover:underline">
+              <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
+            </Link>
             <span aria-hidden>·</span>
             <VisIcon className="h-3.5 w-3.5" aria-label={VIS_LABEL[post.visibility]} />
             {post.location_name && (
@@ -163,6 +165,7 @@ export default function PostCard({ post }: { post: FeedPost }) {
         initialReacted={post.reacted_by_me}
         initialReactionCount={post.reaction_count}
         initialCommentCount={post.comment_count}
+        shareable={post.visibility === "public"}
       />
     </article>
   );
