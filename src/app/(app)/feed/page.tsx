@@ -1,5 +1,5 @@
 // src/app/(app)/feed/page.tsx
-// OPDATERET. Rigtigt feed: viser opslag nyeste først, 10 ad gangen, med "Vis ældre opslag" nederst.
+// OPDATERET (månedens udfordring øverst). Feed: viser opslag nyeste først, 10 ad gangen, med "Vis ældre opslag" nederst.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import { ImagePlus, Fish } from "lucide-react";
 import { requireProfile } from "@/lib/auth";
 import { getFeedPosts } from "@/lib/posts";
 import PostCard from "@/components/post-card";
+import ChallengeCard from "@/components/challenge-card";
 
 export const metadata: Metadata = {
   title: "Feed",
@@ -37,6 +38,8 @@ export default async function FeedPage({
           <ImagePlus className="h-6 w-6 text-reed-500" aria-hidden />
         </Link>
       )}
+
+      {!before && <ChallengeCard />}
 
       {posts.length === 0 && !before && (
         <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-mist-100">
