@@ -1,10 +1,11 @@
 // src/components/post-card.tsx
-// NY FIL. Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer og billeder (1–5).
+// OPDATERET (reaktioner og kommentarer nederst). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer og billeder (1–5).
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin } from "lucide-react";
 import type { FeedPost } from "@/lib/posts";
 import { getFeeling } from "@/lib/feelings";
+import PostActions from "@/components/post-actions";
 
 function Avatar({ name, url }: { name: string; url: string | null }) {
   if (url) {
@@ -154,6 +155,15 @@ export default function PostCard({ post }: { post: FeedPost }) {
       )}
 
       <ImageGrid images={post.images} />
+
+      <PostActions
+        postId={post.id}
+        postOwnerId={post.author.id}
+        viewerId={post.viewer_id}
+        initialReacted={post.reacted_by_me}
+        initialReactionCount={post.reaction_count}
+        initialCommentCount={post.comment_count}
+      />
     </article>
   );
 }
