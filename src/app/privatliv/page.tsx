@@ -1,5 +1,5 @@
 // src/app/privatliv/page.tsx
-// NY FIL. Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
+// OPDATERET (offentlige opslag kan ses uden login og deles med link). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,7 +11,7 @@ const CONTROLLER_ADDRESS = "Kolding, Danmark";
 const CONTACT_EMAIL = "kontakt@hookedspace.com";
 const SUPABASE_REGION = "EU (Frankfurt, Tyskland)";
 const MIN_AGE = 15;
-const LAST_UPDATED = "15. oktober 2026";
+const LAST_UPDATED = "16. oktober 2026";
 // -----------------------------------------------------------
 
 export const metadata: Metadata = {
@@ -86,7 +86,8 @@ export default function PrivatlivPage() {
           <Section title="4. Hvem kan se dine oplysninger?">
             <ul className="list-disc space-y-1 pl-5">
               <li>Din profil (navn, brugernavn, by, erfaring, om mig og profilbillede) kan ses af andre brugere.</li>
-              <li>Dine opslag kan ses af dem, du vælger: <strong>Offentlig</strong> (alle brugere), <strong>Følgere</strong> eller <strong>Kun mig</strong>.</li>
+              <li>Dine opslag kan ses af dem, du vælger: <strong>Offentlig</strong>, <strong>Følgere</strong> eller <strong>Kun mig</strong>.</li>
+              <li>Offentlige opslag kan ses af alle, også uden login, og kan deles med et link. De kan derfor også blive fundet af søgemaskiner.</li>
               <li>Din email bliver aldrig vist for andre brugere.</li>
               <li>Billeder gemmes med lange, tilfældige adresser, som ikke kan gættes.</li>
             </ul>
