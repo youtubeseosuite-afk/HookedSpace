@@ -1,11 +1,11 @@
 // src/components/post-actions.tsx
-// NY FIL. Bunden af et opslag: "Knæk og bræk"-reaktion, antal, og kommentarer (vis, skriv og slet).
+// OPDATERET (ny "Del"-knap på offentlige opslag). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
 
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Send, Trash2, Loader2 } from "lucide-react";
+import { MessageCircle, Send, Trash2, Loader2, Share2, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Comment = {
@@ -47,6 +47,7 @@ export default function PostActions({
   initialReacted,
   initialReactionCount,
   initialCommentCount,
+  shareable,
 }: {
   postId: string;
   postOwnerId: string;
@@ -54,7 +55,31 @@ export default function PostActions({
   initialReacted: boolean;
   initialReactionCount: number;
   initialCommentCount: number;
+  shareable: boolean;
 }) {
+  const [copied, setCopied] = useState(false);
+
+  async function share() {
+    const url = `${window.location.origin}/p/${postId}`;
+    // Mobil: åbn telefonens del-menu (Messenger, SMS, Facebook ...)
+    if (navigator.share) {
+      try {
+        await navigator.share({ url, title: "HookedSpace" });
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return; // brugeren lukkede menuen
+      }
+    }
+    // Computer: kopier linket
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Kopier linket:", url);
+    }
+  }
+
   const [reacted, setReacted] = useState(initialReacted);
   const [reactionCount, setReactionCount] = useState(initialReactionCount);
   const [reactionBusy, setReactionBusy] = useState(false);
@@ -150,13 +175,13 @@ export default function PostActions({
       )}
 
       {/* Knapper */}
-      <div className="mx-4 mt-2 grid grid-cols-2 gap-1 border-t border-mist-100 py-1">
+      <div className="mx-4 mt-2 flex gap-1 border-t border-mist-100 py-1">
         <button
           type="button"
           onClick={toggleReaction}
           disabled={!viewerId}
           aria-pressed={reacted}
-          className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition hover:bg-mist-50 ${
+          className={`flex flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1 py-2 text-[13px] font-semibold sm:px-2 sm:text-sm transition hover:bg-mist-50 ${
             reacted ? "text-lure-500" : "text-deep-700"
           }`}
         >
@@ -168,11 +193,23 @@ export default function PostActions({
         <button
           type="button"
           onClick={openComments}
-          className="flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold text-deep-700 transition hover:bg-mist-50"
+          className="flex flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1 py-2 text-[13px] font-semibold sm:px-2 sm:text-sm text-deep-700 transition hover:bg-mist-50"
         >
-          <MessageCircle className="h-5 w-5" aria-hidden />
+          <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
           Kommenter
         </button>
+        {shareable && (
+          <button
+            type="button"
+            onClick={share}
+            className={`flex flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1 py-2 text-[13px] font-semibold sm:px-2 sm:text-sm transition hover:bg-mist-50 ${
+              copied ? "text-reed-500" : "text-deep-700"
+            }`}
+          >
+            {copied ? <Check className="h-5 w-5 shrink-0" aria-hidden /> : <Share2 className="h-5 w-5 shrink-0" aria-hidden />}
+            {copied ? "Kopieret" : "Del"}
+          </button>
+        )}
       </div>
 
       {/* Kommentarer */}
