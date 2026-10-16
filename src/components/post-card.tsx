@@ -1,5 +1,5 @@
 // src/components/post-card.tsx
-// OPDATERET (viser gruppen opslaget er skrevet i; opslag fra private grupper kan ikke deles). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
+// OPDATERET (lille mærke der viser, hvorfor opslaget vises i det anbefalede feed). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2, ChevronRight } from "lucide-react";
@@ -43,6 +43,15 @@ function formatNumber(n: number) {
 
 const VIS_ICON = { public: Globe, followers: Users, private: Lock } as const;
 const VIS_LABEL = { public: "Offentlig", followers: "Følgere", private: "Kun mig" } as const;
+
+// Begrundelse fra det anbefalede feed. "group" vises ikke, fordi gruppens navn allerede står i opslaget.
+const REASON_LABEL: Record<string, string> = {
+  friend: "Ven",
+  following: "Du følger",
+  tagged: "Du er tagget",
+  local: "Fra din by",
+  region: "Fra dit område",
+};
 
 function ImageGrid({ images }: { images: FeedPost["images"] }) {
   const n = images.length;
@@ -155,6 +164,11 @@ function PostHeader({
               <MapPin className="h-3.5 w-3.5" aria-hidden />
               <span>{post.location_name}</span>
             </>
+          )}
+          {post.reason && REASON_LABEL[post.reason] && (
+            <span className="ml-1 rounded-full bg-reed-300/40 px-2 py-0.5 text-[11px] font-semibold text-deep-900">
+              {REASON_LABEL[post.reason]}
+            </span>
           )}
         </p>
       </div>
