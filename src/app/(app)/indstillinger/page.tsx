@@ -1,11 +1,12 @@
 // src/app/(app)/indstillinger/page.tsx
-// NY FIL. Indstillinger: rediger din profil. Link til din offentlige profil og log ud.
+// OPDATERET ("Slet min konto"). Indstillinger: rediger din profil, log ud og slet konto.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import SettingsForm from "./settings-form";
+import DeleteAccount from "./delete-account";
 
 export const metadata: Metadata = {
   title: "Indstillinger",
@@ -47,6 +48,16 @@ export default async function IndstillingerPage() {
             Log ud
           </button>
         </form>
+        <div className="mt-5 border-t border-mist-100 pt-5">
+          <h3 className="mb-1 text-sm font-semibold text-deep-900">Slet konto</h3>
+          <p className="mb-3 text-sm text-deep-700">
+            Sletter din profil og alt, du har delt på HookedSpace.{" "}
+            <Link href="/privatliv" className="underline">
+              Læs mere
+            </Link>
+          </p>
+          <DeleteAccount />
+        </div>
       </section>
     </main>
   );
