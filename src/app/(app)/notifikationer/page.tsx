@@ -1,10 +1,10 @@
 // src/app/(app)/notifikationer/page.tsx
-// OPDATERET (gennemførte udfordringer). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
+// OPDATERET (gruppe-anmodninger og godkendt medlemskab). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
 // Ulæste markeres med en prik og bliver markeret som læst, når siden åbnes.
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bell, MessageCircle, UserPlus, Tag, Repeat2 } from "lucide-react";
+import { Bell, MessageCircle, UserPlus, Tag, Repeat2, Users } from "lucide-react";
 import { requireProfile, type CurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,7 +12,16 @@ export const metadata: Metadata = {
   title: "Notifikationer",
 };
 
-type NotificationType = "reaction" | "comment" | "tag" | "follow" | "share" | "badge" | "challenge";
+type NotificationType =
+  | "reaction"
+  | "comment"
+  | "tag"
+  | "follow"
+  | "share"
+  | "badge"
+  | "challenge"
+  | "group_request"
+  | "group_approved";
 
 type Row = {
   id: string;
@@ -25,9 +34,10 @@ type Row = {
   comment: { body: string } | null;
   badge: { name: string; emoji: string; description: string } | null;
   challenge: { title: string; emoji: string; description: string } | null;
+  group: { slug: string; name: string } | null;
 };
 
-const TEXT: Record<Exclude<NotificationType, "badge" | "challenge">, string> = {
+const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_request" | "group_approved">, string> = {
   reaction: "gav dit opslag et Knæk og bræk",
   comment: "kommenterede dit opslag",
   tag: "taggede dig i et opslag",
@@ -38,6 +48,8 @@ const TEXT: Record<Exclude<NotificationType, "badge" | "challenge">, string> = {
 function hrefFor(n: Row, me: CurrentProfile) {
   if (n.type === "badge") return `/u/${me.username}`;
   if (n.type === "challenge") return "/feed";
+  if (n.type === "group_request") return n.group ? `/g/${n.group.slug}/admin` : "/grupper";
+  if (n.type === "group_approved") return n.group ? `/g/${n.group.slug}` : "/grupper";
   if (n.type === "follow") return n.actor ? `/u/${n.actor.username}` : "#";
   return n.post_id ? `/p/${n.post_id}` : "#";
 }
@@ -69,6 +81,13 @@ function TypeIcon({ type }: { type: NotificationType }) {
       return (
         <span className={`${base} bg-deep-900 text-white`}>
           <UserPlus className="h-3 w-3" />
+        </span>
+      );
+    case "group_request":
+    case "group_approved":
+      return (
+        <span className={`${base} bg-deep-900 text-lure-400`}>
+          <Users className="h-3 w-3" />
         </span>
       );
     case "badge":
@@ -104,7 +123,8 @@ export default async function NotifikationerPage() {
        post:posts!notifications_post_id_fkey ( body ),
        comment:post_comments!notifications_comment_id_fkey ( body ),
        badge:badges!notifications_badge_id_fkey ( name, emoji, description ),
-       challenge:challenges!notifications_challenge_id_fkey ( title, emoji, description )`
+       challenge:challenges!notifications_challenge_id_fkey ( title, emoji, description ),
+       group:groups!notifications_group_id_fkey ( slug, name )`
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -134,7 +154,9 @@ export default async function NotifikationerPage() {
             const name = n.actor?.display_name ?? n.actor?.username ?? "Nogen";
             const href = hrefFor(n, me);
             const extra =
-              n.type === "badge"
+              n.type === "group_request" || n.type === "group_approved"
+                ? null
+                : n.type === "badge"
                 ? n.badge?.description
                 : n.type === "challenge"
                   ? n.challenge?.description
@@ -196,7 +218,19 @@ export default async function NotifikationerPage() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm text-deep-900">
-                      <span className="font-semibold text-deep-950">{name}</span> {TEXT[n.type as Exclude<NotificationType, "badge" | "challenge">]}
+                      <span className="font-semibold text-deep-950">{name}</span>{" "}
+                      {n.type === "group_request" ? (
+                        <>
+                          vil gerne være med i <span className="font-semibold text-deep-950">{n.group?.name ?? "din gruppe"}</span>
+                        </>
+                      ) : n.type === "group_approved" ? (
+                        <>
+                          godkendte dig. Du er nu medlem af{" "}
+                          <span className="font-semibold text-deep-950">{n.group?.name ?? "gruppen"}</span>
+                        </>
+                      ) : (
+                        TEXT[n.type as keyof typeof TEXT]
+                      )}
                     </span>
                     {extra && <span className="mt-0.5 block truncate text-sm text-deep-700">&quot;{extra}&quot;</span>}
                     <span className={`mt-0.5 block text-xs ${unread ? "font-semibold text-lure-500" : "text-deep-700"}`}>
