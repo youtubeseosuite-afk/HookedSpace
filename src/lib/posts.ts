@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// OPDATERET (ny getPosts() til profil og trofævæg). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (antal reaktioner og kommentarer, om jeg har reageret, og hvem der kigger). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +19,10 @@ export type FeedPost = {
   species: { name: string } | null;
   images: { url: string; width: number | null; height: number | null }[];
   tagged: { id: string; username: string; display_name: string | null }[];
+  reaction_count: number;
+  comment_count: number;
+  reacted_by_me: boolean;
+  viewer_id: string | null;
 };
 
 export const FEED_PAGE_SIZE = 10;
@@ -28,26 +32,37 @@ const POST_SELECT = `
   author:profiles!posts_user_id_fkey ( id, username, display_name, avatar_url ),
   species ( name ),
   post_images ( storage_path, width, height, position ),
-  post_tags ( tagged:profiles!post_tags_tagged_user_id_fkey ( id, username, display_name ) )
+  post_tags ( tagged:profiles!post_tags_tagged_user_id_fkey ( id, username, display_name ) ),
+  post_reactions ( count ),
+  post_comments ( count )
 `;
 
 export function postImageUrl(path: string) {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/post-images/${path}`;
 }
 
-type RawPost = Omit<FeedPost, "images" | "tagged"> & {
+type RawPost = Omit<
+  FeedPost,
+  "images" | "tagged" | "reaction_count" | "comment_count" | "reacted_by_me" | "viewer_id"
+> & {
   post_images: { storage_path: string; width: number | null; height: number | null; position: number }[] | null;
   post_tags: { tagged: FeedPost["tagged"][number] | null }[] | null;
+  post_reactions: { count: number }[] | null;
+  post_comments: { count: number }[] | null;
 };
 
-function mapPost(p: RawPost): FeedPost {
-  const { post_images, post_tags, ...rest } = p;
+function mapPost(p: RawPost, viewerId: string | null, myReactions: Set<string>): FeedPost {
+  const { post_images, post_tags, post_reactions, post_comments, ...rest } = p;
   return {
     ...rest,
     images: [...(post_images ?? [])]
       .sort((a, b) => a.position - b.position)
       .map((i) => ({ url: postImageUrl(i.storage_path), width: i.width, height: i.height })),
     tagged: (post_tags ?? []).map((t) => t.tagged).filter((t): t is FeedPost["tagged"][number] => !!t),
+    reaction_count: post_reactions?.[0]?.count ?? 0,
+    comment_count: post_comments?.[0]?.count ?? 0,
+    reacted_by_me: myReactions.has(p.id),
+    viewer_id: viewerId,
   };
 }
 
@@ -62,6 +77,8 @@ type GetPostsOptions = {
 // Fælles hentning til feed, profil og trofævæg
 export async function getPosts({ before, userId, trophiesOnly, limit = FEED_PAGE_SIZE }: GetPostsOptions = {}) {
   const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const viewerId = (claimsData?.claims?.sub as string | undefined) ?? null;
 
   let query = supabase
     .from("posts")
@@ -79,9 +96,22 @@ export async function getPosts({ before, userId, trophiesOnly, limit = FEED_PAGE
     return { posts: [] as FeedPost[], nextCursor: null as string | null };
   }
 
-  const rows = (data ?? []) as unknown as RawPost[];
+  const rows = ((data ?? []) as unknown as RawPost[]).slice(0, limit + 1);
   const hasMore = rows.length > limit;
-  const posts = rows.slice(0, limit).map(mapPost);
+  const pageRows = rows.slice(0, limit);
+
+  // Hvilke af opslagene har jeg selv reageret på?
+  let myReactions = new Set<string>();
+  if (viewerId && pageRows.length > 0) {
+    const { data: mine } = await supabase
+      .from("post_reactions")
+      .select("post_id")
+      .eq("user_id", viewerId)
+      .in("post_id", pageRows.map((r) => r.id));
+    myReactions = new Set((mine ?? []).map((r) => r.post_id));
+  }
+
+  const posts = pageRows.map((r) => mapPost(r, viewerId, myReactions));
   const nextCursor = hasMore ? posts[posts.length - 1].created_at : null;
 
   return { posts, nextCursor };
