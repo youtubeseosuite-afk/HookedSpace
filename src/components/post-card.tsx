@@ -1,5 +1,5 @@
 // src/components/post-card.tsx
-// OPDATERET (viser delte opslag med originalen indlejret). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
+// OPDATERET (mærkerne "Ny PR!" og "Ny art!" på fangster). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2 } from "lucide-react";
@@ -162,6 +162,12 @@ function PostBody({ post, small = false }: { post: FeedPost; small?: boolean }) 
               <Trophy className="h-4 w-4" aria-hidden />
               Trofæ
             </span>
+          )}
+          {post.is_pr && (
+            <span className="ml-auto rounded-full bg-lure-400 px-2.5 py-0.5 text-xs font-bold text-deep-950">🏅 Ny PR!</span>
+          )}
+          {post.is_new_species && (
+            <span className="ml-auto rounded-full bg-reed-300 px-2.5 py-0.5 text-xs font-bold text-deep-950">✨ Ny art!</span>
           )}
         </div>
       )}
