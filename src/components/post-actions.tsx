@@ -1,11 +1,12 @@
 // src/components/post-actions.tsx
-// OPDATERET (ny "Del"-knap på offentlige opslag). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
+// OPDATERET ("Del" giver nu valget "Del i dit feed" eller "Del link"). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
 
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Send, Trash2, Loader2, Share2, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { MessageCircle, Send, Trash2, Loader2, Share2, Check, Repeat2, Link2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Comment = {
@@ -40,8 +41,11 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   );
 }
 
+type Visibility = "public" | "followers" | "private";
+
 export default function PostActions({
   postId,
+  shareTargetId,
   postOwnerId,
   viewerId,
   initialReacted,
@@ -50,6 +54,7 @@ export default function PostActions({
   shareable,
 }: {
   postId: string;
+  shareTargetId: string; // det opslag der deles (originalen, hvis dette selv er en deling)
   postOwnerId: string;
   viewerId: string | null;
   initialReacted: boolean;
@@ -57,10 +62,54 @@ export default function PostActions({
   initialCommentCount: number;
   shareable: boolean;
 }) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [shareMenu, setShareMenu] = useState(false);
+  const [composer, setComposer] = useState(false);
+  const [shareText, setShareText] = useState("");
+  const [shareVisibility, setShareVisibility] = useState<Visibility>("public");
+  const [sharing, setSharing] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
-  async function share() {
-    const url = `${window.location.origin}/p/${postId}`;
+  function onShareClick() {
+    // Ikke logget ind: kun link-deling
+    if (!viewerId) {
+      shareLink();
+      return;
+    }
+    setShareMenu((v) => !v);
+    setComposer(false);
+    setShareError(null);
+  }
+
+  async function shareToFeed() {
+    if (!viewerId || sharing) return;
+    setSharing(true);
+    setShareError(null);
+    const supabase = createClient();
+    const { error } = await supabase.from("posts").insert({
+      user_id: viewerId,
+      body: shareText.trim() || null,
+      visibility: shareVisibility,
+      shared_post_id: shareTargetId,
+    });
+    setSharing(false);
+    if (error) {
+      setShareError("Opslaget kunne ikke deles. Prøv igen.");
+      return;
+    }
+    setShared(true);
+    setComposer(false);
+    setShareMenu(false);
+    setShareText("");
+    router.refresh();
+    setTimeout(() => setShared(false), 3000);
+  }
+
+  async function shareLink() {
+    setShareMenu(false);
+    const url = `${window.location.origin}/p/${shareTargetId}`;
     // Mobil: åbn telefonens del-menu (Messenger, SMS, Facebook ...)
     if (navigator.share) {
       try {
@@ -201,16 +250,88 @@ export default function PostActions({
         {shareable && (
           <button
             type="button"
-            onClick={share}
+            onClick={onShareClick}
+            aria-expanded={shareMenu}
             className={`flex flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1 py-2 text-[13px] font-semibold sm:px-2 sm:text-sm transition hover:bg-mist-50 ${
-              copied ? "text-reed-500" : "text-deep-700"
+              copied || shared ? "text-reed-500" : shareMenu ? "bg-mist-50 text-deep-900" : "text-deep-700"
             }`}
           >
-            {copied ? <Check className="h-5 w-5 shrink-0" aria-hidden /> : <Share2 className="h-5 w-5 shrink-0" aria-hidden />}
-            {copied ? "Kopieret" : "Del"}
+            {copied || shared ? <Check className="h-5 w-5 shrink-0" aria-hidden /> : <Share2 className="h-5 w-5 shrink-0" aria-hidden />}
+            {copied ? "Kopieret" : shared ? "Delt" : "Del"}
           </button>
         )}
       </div>
+
+      {/* Del-valg */}
+      {shareMenu && !composer && (
+        <div className="mx-4 mb-3 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setComposer(true)}
+            className="flex items-center justify-center gap-2 rounded-lg bg-deep-900 px-3 py-2.5 text-sm font-semibold text-mist-50 hover:bg-deep-800"
+          >
+            <Repeat2 className="h-4 w-4" aria-hidden />
+            Del i dit feed
+          </button>
+          <button
+            type="button"
+            onClick={shareLink}
+            className="flex items-center justify-center gap-2 rounded-lg bg-mist-100 px-3 py-2.5 text-sm font-semibold text-deep-900 hover:bg-mist-50"
+          >
+            <Link2 className="h-4 w-4" aria-hidden />
+            Del link
+          </button>
+        </div>
+      )}
+
+      {/* Skriv noget til delingen */}
+      {composer && (
+        <div className="mx-4 mb-3 space-y-2 rounded-xl bg-mist-50 p-3">
+          <textarea
+            value={shareText}
+            onChange={(e) => setShareText(e.target.value)}
+            maxLength={5000}
+            rows={2}
+            autoFocus
+            placeholder="Skriv noget om opslaget (valgfrit)"
+            className="w-full resize-y rounded-lg border border-mist-100 bg-white px-3 py-2 text-sm text-deep-950 outline-none focus:border-deep-700"
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={shareVisibility}
+              onChange={(e) => setShareVisibility(e.target.value as Visibility)}
+              aria-label="Hvem kan se delingen"
+              className="rounded-lg border border-mist-100 bg-white px-2 py-2 text-sm text-deep-900 outline-none focus:border-deep-700"
+            >
+              <option value="public">Offentlig</option>
+              <option value="followers">Følgere</option>
+              <option value="private">Kun mig</option>
+            </select>
+            <div className="ml-auto flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setComposer(false);
+                  setShareMenu(false);
+                }}
+                className="rounded-lg px-3 py-2 text-sm font-semibold text-deep-700 hover:bg-mist-100"
+              >
+                Annuller
+              </button>
+              <button
+                type="button"
+                onClick={shareToFeed}
+                disabled={sharing}
+                className="flex items-center gap-2 rounded-lg bg-deep-900 px-4 py-2 text-sm font-semibold text-mist-50 hover:bg-deep-800 disabled:opacity-60"
+              >
+                {sharing && <Loader2 className="h-4 w-4 animate-spin" />}
+                Del nu
+              </button>
+            </div>
+          </div>
+          {shareError && <p className="text-xs text-red-700">{shareError}</p>}
+        </div>
+      )}
 
       {/* Kommentarer */}
       {open && (
