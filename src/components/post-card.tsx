@@ -1,19 +1,20 @@
 // src/components/post-card.tsx
-// OPDATERET (Del-knap på offentlige opslag, tidspunktet linker til opslagets egen side). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer og billeder (1–5).
+// OPDATERET (viser delte opslag med originalen indlejret). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
-import { Globe, Users, Lock, Fish, Trophy, MapPin } from "lucide-react";
+import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2 } from "lucide-react";
 import type { FeedPost } from "@/lib/posts";
 import { getFeeling } from "@/lib/feelings";
 import PostActions from "@/components/post-actions";
 
-function Avatar({ name, url }: { name: string; url: string | null }) {
+function Avatar({ name, url, small = false }: { name: string; url: string | null; small?: boolean }) {
+  const size = small ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm";
   if (url) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={url} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" referrerPolicy="no-referrer" />;
+    return <img src={url} alt="" className={`${size} shrink-0 rounded-full object-cover`} referrerPolicy="no-referrer" />;
   }
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-reed-500 text-sm font-semibold text-white">
+    <span className={`${size} flex shrink-0 items-center justify-center rounded-full bg-reed-500 font-semibold text-white`}>
       {name.charAt(0).toUpperCase()}
     </span>
   );
@@ -81,68 +82,77 @@ function ImageGrid({ images }: { images: FeedPost["images"] }) {
   );
 }
 
-export default function PostCard({ post }: { post: FeedPost }) {
+// Hoved: avatar, navn, følelse, taggede, tidspunkt, synlighed og sted
+function PostHeader({ post, small = false, sharedLabel = false }: { post: FeedPost; small?: boolean; sharedLabel?: boolean }) {
   const name = post.author.display_name ?? post.author.username;
   const feeling = getFeeling(post.feeling);
   const VisIcon = VIS_ICON[post.visibility];
-  const isCatch = !!post.species;
 
   return (
-    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-mist-100">
-      <header className="flex gap-3 p-4">
-        <Link href={`/u/${post.author.username}`}>
-          <Avatar name={name} url={post.author.avatar_url} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm leading-snug text-deep-700">
-            <Link href={`/u/${post.author.username}`} className="font-semibold text-deep-950 hover:underline">
-              {name}
-            </Link>
-            {feeling && (
-              <>
-                {" "}føler sig {feeling.emoji} <span className="font-medium text-deep-900">{feeling.label}</span>
-              </>
-            )}
-            {post.tagged.length > 0 && (
-              <>
-                {" "}med{" "}
-                {post.tagged.map((t, i) => (
-                  <span key={t.id}>
-                    {i > 0 && (i === post.tagged.length - 1 ? " og " : ", ")}
-                    <Link href={`/u/${t.username}`} className="font-medium text-deep-900 hover:underline">
-                      {t.display_name ?? t.username}
-                    </Link>
-                  </span>
-                ))}
-              </>
-            )}
-          </p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-deep-700">
-            <Link href={`/p/${post.id}`} className="hover:underline">
-              <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
-            </Link>
-            <span aria-hidden>·</span>
-            <VisIcon className="h-3.5 w-3.5" aria-label={VIS_LABEL[post.visibility]} />
-            {post.location_name && (
-              <>
-                <span aria-hidden>·</span>
-                <MapPin className="h-3.5 w-3.5" aria-hidden />
-                <span>{post.location_name}</span>
-              </>
-            )}
-          </p>
-        </div>
-      </header>
+    <header className={`flex gap-3 ${small ? "p-3" : "p-4"}`}>
+      <Link href={`/u/${post.author.username}`}>
+        <Avatar name={name} url={post.author.avatar_url} small={small} />
+      </Link>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm leading-snug text-deep-700">
+          <Link href={`/u/${post.author.username}`} className="font-semibold text-deep-950 hover:underline">
+            {name}
+          </Link>
+          {sharedLabel && <> delte et opslag</>}
+          {feeling && (
+            <>
+              {" "}føler sig {feeling.emoji} <span className="font-medium text-deep-900">{feeling.label}</span>
+            </>
+          )}
+          {post.tagged.length > 0 && (
+            <>
+              {" "}med{" "}
+              {post.tagged.map((t, i) => (
+                <span key={t.id}>
+                  {i > 0 && (i === post.tagged.length - 1 ? " og " : ", ")}
+                  <Link href={`/u/${t.username}`} className="font-medium text-deep-900 hover:underline">
+                    {t.display_name ?? t.username}
+                  </Link>
+                </span>
+              ))}
+            </>
+          )}
+        </p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-deep-700">
+          <Link href={`/p/${post.id}`} className="hover:underline">
+            <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
+          </Link>
+          <span aria-hidden>·</span>
+          <VisIcon className="h-3.5 w-3.5" aria-label={VIS_LABEL[post.visibility]} />
+          {post.location_name && (
+            <>
+              <span aria-hidden>·</span>
+              <MapPin className="h-3.5 w-3.5" aria-hidden />
+              <span>{post.location_name}</span>
+            </>
+          )}
+        </p>
+      </div>
+    </header>
+  );
+}
 
+// Tekst, fangstdetaljer og billeder
+function PostBody({ post, small = false }: { post: FeedPost; small?: boolean }) {
+  const pad = small ? "px-3" : "px-4";
+  return (
+    <>
       {post.body && (
-        <p className="whitespace-pre-wrap break-words px-4 pb-3 text-[15px] leading-relaxed text-deep-950">{post.body}</p>
+        <p className={`whitespace-pre-wrap break-words ${pad} pb-3 text-[15px] leading-relaxed text-deep-950`}>{post.body}</p>
       )}
 
-      {isCatch && (
-        <div className="mx-4 mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-deep-900 px-4 py-3 text-sm text-mist-50">
+      {post.species && (
+        <div
+          className={`${small ? "mx-3" : "mx-4"} mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl bg-deep-900 px-4 py-3 text-sm text-mist-50`}
+        >
           <span className="flex items-center gap-2 font-semibold text-lure-400">
             <Fish className="h-4 w-4" aria-hidden />
-            {post.species!.name}
+            {post.species.name}
           </span>
           {post.weight_kg != null && <span>{formatNumber(post.weight_kg)} kg</span>}
           {post.length_cm != null && <span>{formatNumber(post.length_cm)} cm</span>}
@@ -157,15 +167,55 @@ export default function PostCard({ post }: { post: FeedPost }) {
       )}
 
       <ImageGrid images={post.images} />
+    </>
+  );
+}
+
+export default function PostCard({ post }: { post: FeedPost }) {
+  const original = post.is_share ? post.shared : null;
+  const missingOriginal = post.is_share && !original;
+  const shareable = post.visibility === "public" && !missingOriginal;
+  // Når man deler en deling, deles originalen
+  const shareTargetId = original ? original.id : post.id;
+
+  return (
+    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-mist-100">
+      {post.is_share ? (
+        <>
+          <PostHeader post={post} sharedLabel />
+          {post.body && (
+            <p className="whitespace-pre-wrap break-words px-4 pb-3 text-[15px] leading-relaxed text-deep-950">{post.body}</p>
+          )}
+          <div className="mx-4 mb-1 overflow-hidden rounded-xl ring-1 ring-mist-100">
+            {original ? (
+              <>
+                <PostHeader post={original} small />
+                <PostBody post={original} small />
+              </>
+            ) : (
+              <p className="flex items-center gap-2 bg-mist-50 px-4 py-6 text-sm text-deep-700">
+                <Repeat2 className="h-4 w-4" aria-hidden />
+                Opslaget er ikke længere tilgængeligt.
+              </p>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <PostHeader post={post} />
+          <PostBody post={post} />
+        </>
+      )}
 
       <PostActions
         postId={post.id}
+        shareTargetId={shareTargetId}
         postOwnerId={post.author.id}
         viewerId={post.viewer_id}
         initialReacted={post.reacted_by_me}
         initialReactionCount={post.reaction_count}
         initialCommentCount={post.comment_count}
-        shareable={post.visibility === "public"}
+        shareable={shareable}
       />
     </article>
   );
