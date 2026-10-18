@@ -1,5 +1,5 @@
 // src/app/(app)/indstillinger/settings-form.tsx
-// NY FIL. Formular til at redigere profil: profilbillede (upload), navn, brugernavn, by, erfaringsniveau og bio.
+// OPDATERET (landsdel). Formular til at redigere profil: profilbillede (upload), navn, brugernavn, by, landsdel, erfaringsniveau og bio.
 
 "use client";
 
@@ -9,12 +9,14 @@ import { Camera, Loader2, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/image";
 import { updateProfile, type SettingsState } from "./actions";
+import { REGIONS } from "@/lib/regions";
 
 type Profile = {
   id: string;
   username: string;
   display_name: string;
   city: string | null;
+  region: string | null;
   experience_level: string | null;
   bio: string | null;
   avatar_url: string | null;
@@ -149,6 +151,24 @@ export default function SettingsForm({ profile }: { profile: Profile }) {
           </label>
           <input id="city" name="city" defaultValue={profile.city ?? ""} maxLength={50} className={inputClass} />
           <FieldError msg={fe.city} />
+        </div>
+
+        <div>
+          <label htmlFor="region" className="mb-1 block text-sm font-medium text-deep-900">
+            Landsdel <span className="font-normal text-deep-700">(valgfri)</span>
+          </label>
+          <select id="region" name="region" defaultValue={profile.region ?? ""} className={inputClass}>
+            <option value="">Ikke valgt</option>
+            {REGIONS.map((r) => (
+              <option key={r.key} value={r.key}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-deep-700">
+            Bruges til at vise opslag fra dit område højere i feedet. Vi gætter ud fra din by, men du kan rette det her.
+          </p>
+          <FieldError msg={fe.region} />
         </div>
 
         <div>
