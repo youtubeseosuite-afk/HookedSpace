@@ -1,15 +1,16 @@
 // src/app/(app)/indstillinger/actions.ts
-// NY FIL. Server action der gemmer ændringer til profilen: navn, brugernavn, by, erfaringsniveau og bio.
+// OPDATERET (landsdel). Server action der gemmer ændringer til profilen: navn, brugernavn, by, landsdel, erfaringsniveau og bio.
 
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { REGION_KEYS } from "@/lib/regions";
 
 export type SettingsState = {
   ok?: boolean;
   error?: string;
-  fieldErrors?: Partial<Record<"username" | "display_name" | "city" | "experience_level" | "bio", string>>;
+  fieldErrors?: Partial<Record<"username" | "display_name" | "city" | "region" | "experience_level" | "bio", string>>;
 };
 
 const LEVELS = ["begynder", "oevet", "erfaren", "ekspert"];
@@ -20,6 +21,7 @@ export async function updateProfile(_prev: SettingsState, formData: FormData): P
   const city = String(formData.get("city") ?? "").trim();
   const experience_level = String(formData.get("experience_level") ?? "");
   const bio = String(formData.get("bio") ?? "").trim();
+  const region = String(formData.get("region") ?? "");
 
   const fieldErrors: SettingsState["fieldErrors"] = {};
   if (!/^[a-z0-9_]{3,20}$/.test(username)) fieldErrors.username = "3–20 tegn. Kun små bogstaver a–z, tal og _.";
@@ -27,6 +29,7 @@ export async function updateProfile(_prev: SettingsState, formData: FormData): P
   if (city.length > 50) fieldErrors.city = "Højst 50 tegn.";
   if (!LEVELS.includes(experience_level)) fieldErrors.experience_level = "Vælg dit erfaringsniveau.";
   if (bio.length > 500) fieldErrors.bio = "Højst 500 tegn.";
+  if (region && !REGION_KEYS.includes(region)) fieldErrors.region = "Vælg en landsdel fra listen.";
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
 
   const supabase = await createClient();
@@ -36,7 +39,7 @@ export async function updateProfile(_prev: SettingsState, formData: FormData): P
 
   const { error } = await supabase
     .from("profiles")
-    .update({ username, display_name, city: city || null, experience_level, bio: bio || null })
+    .update({ username, display_name, city: city || null, region: region || null, experience_level, bio: bio || null })
     .eq("id", userId);
 
   if (error) {
