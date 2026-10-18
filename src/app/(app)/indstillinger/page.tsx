@@ -1,5 +1,5 @@
 // src/app/(app)/indstillinger/page.tsx
-// OPDATERET ("Slet min konto"). Indstillinger: rediger din profil, log ud og slet konto.
+// OPDATERET (landsdel). Indstillinger: rediger din profil (inkl. landsdel), log ud og slet konto.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function IndstillingerPage() {
   const me = await requireProfile();
   const supabase = await createClient();
-  const { data } = await supabase.from("profiles").select("bio").eq("id", me.id).single();
+  const { data } = await supabase.from("profiles").select("bio, region").eq("id", me.id).single();
 
   return (
     <main className="mx-auto max-w-xl space-y-4 px-4 py-6 sm:py-8">
@@ -34,6 +34,7 @@ export default async function IndstillingerPage() {
             username: me.username,
             display_name: me.display_name,
             city: me.city,
+            region: data?.region ?? null,
             experience_level: me.experience_level,
             bio: data?.bio ?? null,
             avatar_url: me.avatar_url,
