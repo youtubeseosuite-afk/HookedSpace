@@ -1,9 +1,9 @@
 // src/app/privatliv/page.tsx
-// OPDATERET (man kan selv slette opslag og konto). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
+// OPDATERET (nyt logo). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Fish } from "lucide-react";
+import { LogoBadge } from "@/components/logo";
 
 // ---------- KONFIG: tjek og ret disse oplysninger ----------
 const CONTROLLER_NAME = "Mick Ogilvie";
@@ -34,9 +34,7 @@ export default function PrivatlivPage() {
       <header className="bg-deep-900">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-mist-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-lure-400 text-deep-950">
-              <Fish className="h-5 w-5" aria-hidden />
-            </span>
+            <LogoBadge size="md" />
             HookedSpace
           </Link>
         </div>
