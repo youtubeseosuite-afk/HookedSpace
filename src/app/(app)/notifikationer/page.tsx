@@ -1,5 +1,5 @@
 // src/app/(app)/notifikationer/page.tsx
-// OPDATERET (gruppe-anmodninger og godkendt medlemskab). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
+// OPDATERET (badge-billeder). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
 // Ulæste markeres med en prik og bliver markeret som læst, når siden åbnes.
 
 import type { Metadata } from "next";
@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Bell, MessageCircle, UserPlus, Tag, Repeat2, Users } from "lucide-react";
 import { requireProfile, type CurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import BadgeIcon, { hasBadgeImage } from "@/components/badge-icon";
 
 export const metadata: Metadata = {
   title: "Notifikationer",
@@ -32,6 +33,7 @@ type Row = {
   actor: { username: string; display_name: string | null; avatar_url: string | null } | null;
   post: { body: string | null } | null;
   comment: { body: string } | null;
+  badge_id: string | null;
   badge: { name: string; emoji: string; description: string } | null;
   challenge: { title: string; emoji: string; description: string } | null;
   group: { slug: string; name: string } | null;
@@ -118,7 +120,7 @@ export default async function NotifikationerPage() {
   const { data } = await supabase
     .from("notifications")
     .select(
-      `id, type, post_id, read_at, created_at,
+      `id, type, post_id, badge_id, read_at, created_at,
        actor:profiles!notifications_actor_id_fkey ( username, display_name, avatar_url ),
        post:posts!notifications_post_id_fkey ( body ),
        comment:post_comments!notifications_comment_id_fkey ( body ),
@@ -173,9 +175,13 @@ export default async function NotifikationerPage() {
                     href={href}
                     className={`flex items-start gap-3 p-4 transition hover:bg-mist-50 ${unread ? "bg-lure-400/10" : ""}`}
                   >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-deep-900 text-2xl">
-                      {(isChallenge ? n.challenge?.emoji : n.badge?.emoji) ?? "🏅"}
-                    </span>
+                    {!isChallenge && n.badge_id && hasBadgeImage(n.badge_id) ? (
+                      <BadgeIcon id={n.badge_id} size={44} />
+                    ) : (
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-deep-900 text-2xl">
+                        {(isChallenge ? n.challenge?.emoji : n.badge?.emoji) ?? "🏅"}
+                      </span>
+                    )}
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm text-deep-900">
                         {isChallenge ? "Udfordring gennemført: " : "Nyt badge: "}
