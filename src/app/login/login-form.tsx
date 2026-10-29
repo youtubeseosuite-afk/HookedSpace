@@ -1,5 +1,5 @@
 // src/app/login/login-form.tsx
-// NY FIL. Login-formular: log ind / opret profil med email og adgangskode, eller med Google.
+// OPDATERET (besked til bortviste brugere). Login-formular: log ind / opret profil med email og adgangskode, eller med Google.
 
 "use client";
 
@@ -15,6 +15,7 @@ function translateError(message: string): string {
   if (m.includes("email not confirmed")) return "Du skal bekræfte din email først. Tjek din indbakke.";
   if (m.includes("already registered")) return "Der findes allerede en profil med den email.";
   if (m.includes("password should be at least")) return "Adgangskoden skal være mindst 8 tegn.";
+  if (m.includes("banned")) return "Din profil er bortvist fra HookedSpace. Kontakt os, hvis du mener, det er en fejl.";
   if (m.includes("rate limit")) return "For mange forsøg. Vent lidt og prøv igen.";
   if (m.includes("valid email") || m.includes("invalid format")) return "Skriv en gyldig email.";
   return "Noget gik galt. Prøv igen.";
