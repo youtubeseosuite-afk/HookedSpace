@@ -1,5 +1,5 @@
 // src/lib/auth.ts
-// NY FIL. Henter den indloggede brugers profil. requireProfile() sender til /login eller /velkommen, hvis det er nødvendigt.
+// OPDATERET (bortviste brugere sendes til /bortvist). Henter den indloggede brugers profil. requireProfile() sender til /login eller /velkommen, hvis det er nødvendigt.
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
@@ -19,20 +19,25 @@ export const getCurrentProfile = cache(async () => {
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
-  if (!userId) return { userId: null, profile: null };
+  if (!userId) return { userId: null, profile: null, banned: false };
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url, city, experience_level, onboarded")
-    .eq("id", userId)
-    .single();
+  const [{ data }, { data: ban }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url, city, experience_level, onboarded")
+      .eq("id", userId)
+      .single(),
+    // Aktiv bortvisning? (fejler stille, hvis 014 ikke er kørt)
+    supabase.rpc("my_ban"),
+  ]);
 
-  return { userId, profile: data };
+  return { userId, profile: data, banned: Array.isArray(ban) && ban.length > 0 };
 });
 
 export async function requireProfile(): Promise<CurrentProfile> {
-  const { userId, profile } = await getCurrentProfile();
+  const { userId, profile, banned } = await getCurrentProfile();
   if (!userId) redirect("/login");
+  if (banned) redirect("/bortvist");
   if (!profile?.onboarded || !profile.username) redirect("/velkommen");
 
   return {
