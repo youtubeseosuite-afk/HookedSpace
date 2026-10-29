@@ -1,13 +1,12 @@
 // src/app/bortvist/page.tsx
-// OPDATERET (nyt logo). Vises for bortviste brugere: hvor længe, begrundelse og hvordan man kontakter os.
+// NY FIL. Vises for bortviste brugere: hvor længe, begrundelse og hvordan man kontakter os.
 // Er brugeren ikke (længere) bortvist, sendes de til feedet.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Ban } from "lucide-react";
+import { Ban, Fish } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { LogoBadge } from "@/components/logo";
 
 const CONTACT_EMAIL = "kontakt@hookedspace.com";
 
@@ -46,7 +45,9 @@ export default async function BortvistPage() {
       <header className="bg-deep-900">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-mist-50">
-            <LogoBadge size="md" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-lure-400 text-deep-950">
+              <Fish className="h-5 w-5" aria-hidden />
+            </span>
             HookedSpace
           </Link>
         </div>
