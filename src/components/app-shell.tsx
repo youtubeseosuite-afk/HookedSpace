@@ -1,13 +1,14 @@
 // src/components/app-shell.tsx
-// OPDATERET (nyt menupunkt: Grupper). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
+// OPDATERET (nyt logo). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
 
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fish, Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, type LucideIcon } from "lucide-react";
+import { Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { LogoBadge } from "@/components/logo";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 
@@ -105,9 +106,7 @@ export default function AppShell({
       <header className="sticky top-0 z-40 border-b border-deep-800 bg-deep-900 text-mist-50 md:hidden">
         <div className="flex h-14 items-center justify-between px-4">
           <Link href="/feed" className="flex items-center gap-2 font-bold">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-lure-400 text-deep-950">
-              <Fish className="h-5 w-5" aria-hidden />
-            </span>
+            <LogoBadge size="sm" />
             HookedSpace
           </Link>
           <div className="flex items-center gap-1">
@@ -166,9 +165,7 @@ export default function AppShell({
         aria-label="Hovedmenu"
       >
         <Link href="/feed" className="flex h-16 items-center px-4">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-lure-400 text-deep-950 group-hover:hidden">
-            <Fish className="h-5 w-5" aria-hidden />
-          </span>
+          <LogoBadge size="sm" className="group-hover:hidden" />
           <span className="sr-only whitespace-nowrap text-lg font-bold group-hover:not-sr-only">
             HookedSpace
           </span>
