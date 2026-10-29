@@ -1,14 +1,14 @@
 // src/app/p/[id]/page.tsx
-// NY FIL. Side for ét opslag (delingslink). Kan ses uden login, hvis opslaget er offentligt.
+// OPDATERET (nyt logo). Side for ét opslag (delingslink). Kan ses uden login, hvis opslaget er offentligt.
 // Giver preview med billede og tekst, når linket deles på Messenger, Facebook, SMS osv.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Fish } from "lucide-react";
 import { getPostById } from "@/lib/posts";
 import { getCurrentProfile } from "@/lib/auth";
 import PostCard from "@/components/post-card";
+import { LogoBadge } from "@/components/logo";
 
 type Params = { id: string };
 
@@ -56,9 +56,7 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
       <header className="bg-deep-900">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4">
           <Link href={loggedIn ? "/feed" : "/"} className="flex items-center gap-2 font-bold text-mist-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-lure-400 text-deep-950">
-              <Fish className="h-5 w-5" aria-hidden />
-            </span>
+            <LogoBadge size="md" />
             HookedSpace
           </Link>
           {loggedIn ? (
