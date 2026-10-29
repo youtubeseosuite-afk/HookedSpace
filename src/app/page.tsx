@@ -1,10 +1,11 @@
 // src/app/page.tsx
-// OPDATERET. Offentlig forside for HookedSpace. Loggede brugere sendes direkte til feedet.
+// OPDATERET (nyt logo). Offentlig forside for HookedSpace. Loggede brugere sendes direkte til feedet.
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Fish, Camera, Trophy, Users, ShieldCheck } from "lucide-react";
+import { Camera, Trophy, Users, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { LogoBadge } from "@/components/logo";
 
 const FEATURES = [
   {
@@ -40,9 +41,7 @@ export default async function Home() {
       <header className="bg-deep-900">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-mist-50">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-lure-400 text-deep-950">
-              <Fish className="h-5 w-5" aria-hidden />
-            </span>
+            <LogoBadge size="md" />
             HookedSpace
           </Link>
           <Link href="/login" className="rounded-lg px-4 py-2 text-sm font-semibold text-mist-50 hover:bg-deep-800">
