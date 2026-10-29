@@ -1,7 +1,8 @@
 // src/components/badge-list.tsx
-// NY FIL. Viser brugerens badges. Badges man mangler kan foldes ud, så man kan se, hvad man kan gå efter.
+// OPDATERET (badges vises med billeder). Viser brugerens badges. Badges man mangler kan foldes ud, så man kan se, hvad man kan gå efter.
 
 import { Award } from "lucide-react";
+import BadgeIcon from "./badge-icon";
 
 export type BadgeItem = {
   id: string;
@@ -23,13 +24,11 @@ function BadgeChip({ badge, earned }: { badge: BadgeItem; earned: boolean }) {
   return (
     <li
       title={badge.description}
-      className={`flex items-center gap-2 rounded-xl px-3 py-2 ${
+      className={`flex items-center gap-3 rounded-xl px-2.5 py-2 ${
         earned ? "bg-deep-900 text-mist-50" : "bg-mist-50 text-deep-700/60"
       }`}
     >
-      <span className={`text-lg leading-none ${earned ? "" : "opacity-40 grayscale"}`} aria-hidden>
-        {badge.emoji}
-      </span>
+      <BadgeIcon id={badge.id} emoji={badge.emoji} size={44} locked={!earned} />
       <span className="min-w-0">
         <span className={`block truncate text-sm font-semibold ${earned ? "" : "text-deep-700/70"}`}>{badge.name}</span>
         <span className={`block truncate text-xs ${earned ? "text-reed-300" : ""}`}>{badge.description}</span>
