@@ -1,5 +1,5 @@
 // src/components/post-card.tsx
-// OPDATERET (lille mærke der viser, hvorfor opslaget vises i det anbefalede feed). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
+// OPDATERET (menu med Rapportér og Bloker på andres opslag). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2, ChevronRight } from "lucide-react";
@@ -226,7 +226,15 @@ export default function PostCard({ post }: { post: FeedPost }) {
     (!original?.group || original.group.privacy === "public");
   // Når man deler en deling, deles originalen
   const shareTargetId = original ? original.id : post.id;
-  const menu = post.viewer_id && post.viewer_id === post.author.id ? <PostMenu postId={post.id} /> : null;
+  const isOwner = post.viewer_id === post.author.id;
+  const menu = post.viewer_id ? (
+    <PostMenu
+      postId={post.id}
+      isOwner={isOwner}
+      authorId={post.author.id}
+      authorName={post.author.display_name ?? post.author.username}
+    />
+  ) : null;
 
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-mist-100">
