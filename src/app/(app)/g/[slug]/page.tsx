@@ -1,5 +1,5 @@
 // src/app/(app)/g/[slug]/page.tsx
-// NY FIL. Gruppeside: navn, beskrivelse, regler, medlemskab (anmod / afventer / medlem) og gruppens opslag.
+// OPDATERET (Rapportér gruppe). Gruppeside: navn, beskrivelse, regler, medlemskab (anmod / afventer / medlem) og gruppens opslag.
 // Private grupper: kun medlemmer kan se opslagene. Admins ser antal ventende anmodninger.
 
 import type { Metadata } from "next";
@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPosts } from "@/lib/posts";
 import PostCard from "@/components/post-card";
 import JoinPanel from "./join-panel";
+import ReportButton from "@/components/report-button";
 
 type Params = { slug: string };
 
@@ -115,6 +116,12 @@ export default async function GroupPage({
             isAdmin={isAdmin}
             rules={(rules ?? []) as { id: string; title: string; body: string | null }[]}
           />
+
+          {!isAdmin && (
+            <div className="flex justify-end">
+              <ReportButton targetType="group" targetId={group.id} label="Rapportér gruppe" />
+            </div>
+          )}
 
           {isAdmin && (
             <Link
