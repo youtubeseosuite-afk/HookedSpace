@@ -1,5 +1,5 @@
 // src/app/(app)/u/[username]/page.tsx
-// OPDATERET (faner: Opslag og Billeder, med billedgalleri). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
+// OPDATERET (menu med Rapportér profil og Bloker). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
 // fanen Opslag (badges, fiskepas, trofævæg, opslag) og fanen Billeder (galleri med alle brugerens billeder).
 
 import type { Metadata } from "next";
@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPosts, type FeedPost } from "@/lib/posts";
 import PostCard from "@/components/post-card";
 import FollowButton from "./follow-button";
+import ProfileMenu from "./profile-menu";
 import FishingPass, { type SpeciesItem, type SpeciesStat } from "@/components/fishing-pass";
 import BadgeList, { type BadgeItem } from "@/components/badge-list";
 import PhotoGallery, { type GalleryImage } from "@/components/photo-gallery";
@@ -110,6 +111,7 @@ export default async function ProfilePage({
     userBadgesRes,
     imageCountRes,
     galleryRes,
+    iBlockedRes,
   ] = await Promise.all([
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
@@ -143,6 +145,10 @@ export default async function ProfilePage({
           return q;
         })()
       : Promise.resolve(null),
+    // Har jeg blokeret denne bruger?
+    isMe
+      ? Promise.resolve(null)
+      : supabase.from("blocks").select("blocker_id").eq("blocker_id", me.id).eq("blocked_id", user.id).maybeSingle(),
   ]);
 
   // Galleri
@@ -168,6 +174,7 @@ export default async function ProfilePage({
 
   const iFollow = !!iFollowRes.data;
   const followsMe = !!followsMeRes.data;
+  const iBlocked = !!iBlockedRes?.data;
   const isFriend = iFollow && followsMe;
 
   return (
@@ -233,7 +240,14 @@ export default async function ProfilePage({
               Rediger profil
             </Link>
           ) : (
-            <FollowButton myId={me.id} targetId={user.id} initiallyFollowing={iFollow} followsMe={followsMe} />
+            <div className="flex items-center gap-2">
+              {iBlocked ? (
+                <span className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">Du har blokeret {name}</span>
+              ) : (
+                <FollowButton myId={me.id} targetId={user.id} initiallyFollowing={iFollow} followsMe={followsMe} />
+              )}
+              <ProfileMenu userId={user.id} name={name} initiallyBlocked={iBlocked} />
+            </div>
           )}
         </div>
       </section>
