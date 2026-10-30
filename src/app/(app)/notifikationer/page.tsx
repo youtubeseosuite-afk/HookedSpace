@@ -1,5 +1,5 @@
 // src/app/(app)/notifikationer/page.tsx
-// OPDATERET (badge-billeder). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
+// OPDATERET (samme Flex-ikon for alle niveauer). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
 // Ulæste markeres med en prik og bliver markeret som læst, når siden åbnes.
 
 import type { Metadata } from "next";
@@ -8,6 +8,8 @@ import { Bell, MessageCircle, UserPlus, Tag, Repeat2, Users } from "lucide-react
 import { requireProfile, type CurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import BadgeIcon, { hasBadgeImage } from "@/components/badge-icon";
+import { FlexIcon } from "@/components/flex-badge";
+import { levelByNumber } from "@/lib/flex";
 
 export const metadata: Metadata = {
   title: "Notifikationer",
@@ -22,7 +24,8 @@ type NotificationType =
   | "badge"
   | "challenge"
   | "group_request"
-  | "group_approved";
+  | "group_approved"
+  | "flex_level";
 
 type Row = {
   id: string;
@@ -34,12 +37,13 @@ type Row = {
   post: { body: string | null } | null;
   comment: { body: string } | null;
   badge_id: string | null;
+  flex_level: number | null;
   badge: { name: string; emoji: string; description: string } | null;
   challenge: { title: string; emoji: string; description: string } | null;
   group: { slug: string; name: string } | null;
 };
 
-const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_request" | "group_approved">, string> = {
+const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_request" | "group_approved" | "flex_level">, string> = {
   reaction: "gav dit opslag et Knæk og bræk",
   comment: "kommenterede dit opslag",
   tag: "taggede dig i et opslag",
@@ -49,6 +53,7 @@ const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_requ
 
 function hrefFor(n: Row, me: CurrentProfile) {
   if (n.type === "badge") return `/u/${me.username}`;
+  if (n.type === "flex_level") return "/flex";
   if (n.type === "challenge") return "/feed";
   if (n.type === "group_request") return n.group ? `/g/${n.group.slug}/admin` : "/grupper";
   if (n.type === "group_approved") return n.group ? `/g/${n.group.slug}` : "/grupper";
@@ -94,6 +99,7 @@ function TypeIcon({ type }: { type: NotificationType }) {
       );
     case "badge":
     case "challenge":
+    case "flex_level":
       return null;
   }
 }
@@ -120,7 +126,7 @@ export default async function NotifikationerPage() {
   const { data } = await supabase
     .from("notifications")
     .select(
-      `id, type, post_id, badge_id, read_at, created_at,
+      `id, type, post_id, badge_id, flex_level, read_at, created_at,
        actor:profiles!notifications_actor_id_fkey ( username, display_name, avatar_url ),
        post:posts!notifications_post_id_fkey ( body ),
        comment:post_comments!notifications_comment_id_fkey ( body ),
@@ -166,6 +172,32 @@ export default async function NotifikationerPage() {
                   ? snippet(n.comment?.body)
                   : snippet(n.post?.body);
             const unread = !n.read_at;
+
+            if (n.type === "flex_level") {
+              const lvl = levelByNumber(n.flex_level);
+              return (
+                <li key={n.id}>
+                  <Link
+                    href={href}
+                    className={`flex items-start gap-3 p-4 transition hover:bg-mist-50 ${unread ? "bg-lure-400/10" : ""}`}
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-deep-900 text-lure-400">
+                      <FlexIcon className="h-7 w-7" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm text-deep-900">
+                        Stangen bøjer! Du har nået Flex-niveau {lvl.level}:{" "}
+                        <span className="font-semibold text-deep-950">{lvl.name}</span>
+                      </span>
+                      <span className={`mt-0.5 block text-xs ${unread ? "font-semibold text-lure-500" : "text-deep-700"}`}>
+                        {timeAgo(n.created_at)}
+                      </span>
+                    </span>
+                    {unread && <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-lure-400" aria-label="Ulæst" />}
+                  </Link>
+                </li>
+              );
+            }
 
             if (n.type === "badge" || n.type === "challenge") {
               const isChallenge = n.type === "challenge";
