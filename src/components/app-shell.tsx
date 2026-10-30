@@ -1,5 +1,5 @@
 // src/components/app-shell.tsx
-// OPDATERET (nyt logo). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
+// OPDATERET (Flex-ikonet er nu det samme overalt). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
 
 "use client";
 
@@ -9,8 +9,14 @@ import { usePathname } from "next/navigation";
 import { Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoBadge } from "@/components/logo";
+import { FlexIcon } from "@/components/flex-badge";
 
-type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
+type NavIcon = LucideIcon | React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+type NavItem = { href: string; label: string; icon: NavIcon; badge?: number };
+
+const FlexNavIcon = ({ className }: { className?: string; "aria-hidden"?: boolean }) => (
+  <FlexIcon className={className} />
+);
 
 const NOTIFICATIONS_PATH = "/notifikationer";
 
@@ -87,6 +93,7 @@ export default function AppShell({
     { href: "/post/ny", label: "Ny Post", icon: PlusCircle },
     { href: NOTIFICATIONS_PATH, label: "Notifikationer", icon: Bell, badge: unread },
     { href: "/grupper", label: "Grupper", icon: Users },
+    { href: "/flex", label: "Flex", icon: FlexNavIcon },
     { href: "/opdag", label: "Find fiskere", icon: Search },
     { href: `/u/${username}`, label: "Min profil", icon: User },
     { href: "/indstillinger", label: "Indstillinger", icon: Settings },
