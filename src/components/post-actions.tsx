@@ -1,12 +1,13 @@
 // src/components/post-actions.tsx
-// OPDATERET ("Del" giver nu valget "Del i dit feed" eller "Del link"). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
+// OPDATERET (Rapportér på andres kommentarer). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
 
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Send, Trash2, Loader2, Share2, Check, Repeat2, Link2 } from "lucide-react";
+import { MessageCircle, Send, Trash2, Loader2, Share2, Check, Repeat2, Link2, Flag } from "lucide-react";
+import ReportDialog from "@/components/report-dialog";
 import { createClient } from "@/lib/supabase/client";
 
 type Comment = {
@@ -135,6 +136,7 @@ export default function PostActions({
 
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const [reportCommentId, setReportCommentId] = useState<string | null>(null);
   const [commentCount, setCommentCount] = useState(initialCommentCount);
   const [loading, setLoading] = useState(false);
   const [text, setText] = useState("");
@@ -363,6 +365,16 @@ export default function PostActions({
                   </div>
                   <div className="mt-0.5 flex items-center gap-3 px-3 text-xs text-deep-700">
                     <time dateTime={c.created_at}>{shortTime(c.created_at)}</time>
+                    {viewerId && viewerId !== c.user_id && (
+                      <button
+                        type="button"
+                        onClick={() => setReportCommentId(c.id)}
+                        className="flex items-center gap-1 opacity-70 hover:text-red-700 hover:opacity-100"
+                      >
+                        <Flag className="h-3 w-3" aria-hidden />
+                        Rapportér
+                      </button>
+                    )}
                     {canDelete && (
                       <button
                         type="button"
@@ -378,6 +390,10 @@ export default function PostActions({
               </div>
             );
           })}
+
+          {reportCommentId && (
+            <ReportDialog targetType="comment" targetId={reportCommentId} onClose={() => setReportCommentId(null)} />
+          )}
 
           {comments && comments.length === 0 && !loading && (
             <p className="text-sm text-deep-700">Ingen kommentarer endnu. Skriv den første.</p>
