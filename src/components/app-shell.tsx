@@ -1,5 +1,5 @@
 // src/components/app-shell.tsx
-// OPDATERET (FAQ i menuen i stedet for Flex). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
+// OPDATERET (nyt navn: FiskoMan). App-rammen: smal sidebar på tablet/desktop (ikoner, tekst ved hover) og topbar med burger-menu på mobil.
 
 "use client";
 
@@ -108,7 +108,7 @@ export default function AppShell({
         <div className="flex h-14 items-center justify-between px-4">
           <Link href="/feed" className="flex items-center gap-2 font-bold">
             <LogoBadge size="sm" />
-            HookedSpace
+            FiskoMan
           </Link>
           <div className="flex items-center gap-1">
             <Link
@@ -168,7 +168,7 @@ export default function AppShell({
         <Link href="/feed" className="flex h-16 items-center px-4">
           <LogoBadge size="sm" className="group-hover:hidden" />
           <span className="sr-only whitespace-nowrap text-lg font-bold group-hover:not-sr-only">
-            HookedSpace
+            FiskoMan
           </span>
         </Link>
 
