@@ -1,5 +1,5 @@
 // src/app/(app)/u/[username]/page.tsx
-// OPDATERET (Rediger profil er et tandhjul i hjørnet). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
+// OPDATERET (Flex-tallet linker til Flex-forklaringen). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
 // fanen Opslag (badges, fiskepas, trofævæg, opslag) og fanen Billeder (galleri med alle brugerens billeder).
 
 import type { Metadata } from "next";
@@ -12,7 +12,6 @@ import { getPosts, type FeedPost } from "@/lib/posts";
 import PostCard from "@/components/post-card";
 import FollowButton from "./follow-button";
 import ProfileMenu from "./profile-menu";
-import FlexMeter from "@/components/flex-meter";
 import FishingPass, { type SpeciesItem, type SpeciesStat } from "@/components/fishing-pass";
 import BadgeList, { type BadgeItem } from "@/components/badge-list";
 import PhotoGallery, { type GalleryImage } from "@/components/photo-gallery";
@@ -226,8 +225,6 @@ export default async function ProfilePage({
 
         {user.bio && <p className="mt-4 whitespace-pre-wrap text-sm text-deep-900">{user.bio}</p>}
 
-        <FlexMeter points={user.flex ?? 0} />
-
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-mist-100 pt-4">
           <dl className="flex gap-5 text-sm">
             <div>
@@ -241,6 +238,15 @@ export default async function ProfilePage({
             <div>
               <dt className="sr-only">Følger</dt>
               <dd><span className="font-bold text-deep-950">{followingRes.count ?? 0}</span> <span className="text-deep-700">følger</span></dd>
+            </div>
+            <div>
+              <dt className="sr-only">Flex</dt>
+              <dd>
+                <Link href="/flex" className="hover:underline" title="Hvad er Flex?">
+                  <span className="font-bold text-deep-950">{(user.flex ?? 0).toLocaleString("da-DK")}</span>{" "}
+                  <span className="text-deep-700">flex</span>
+                </Link>
+              </dd>
             </div>
           </dl>
 
