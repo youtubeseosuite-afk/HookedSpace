@@ -1,5 +1,5 @@
 // src/app/page.tsx
-// OPDATERET (links til FAQ og regler i bunden). Offentlig forside for HookedSpace. Loggede brugere sendes direkte til feedet.
+// OPDATERET (nyt navn: FiskoMan). Offentlig forside for FiskoMan. Loggede brugere sendes direkte til feedet.
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -42,7 +42,7 @@ export default async function Home() {
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-mist-50">
             <LogoBadge size="md" />
-            HookedSpace
+            FiskoMan
           </Link>
           <Link href="/login" className="rounded-lg px-4 py-2 text-sm font-semibold text-mist-50 hover:bg-deep-800">
             Log ind
@@ -92,7 +92,7 @@ export default async function Home() {
       {/* Bund */}
       <footer className="border-t border-mist-100 px-4 py-6">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 text-sm text-deep-700 sm:flex-row">
-          <p>© {new Date().getFullYear()} HookedSpace</p>
+          <p>© {new Date().getFullYear()} FiskoMan</p>
           <nav className="flex gap-4">
             <Link href="/faq" className="hover:underline">
               FAQ
