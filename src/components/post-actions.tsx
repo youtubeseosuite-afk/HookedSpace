@@ -1,5 +1,5 @@
 // src/components/post-actions.tsx
-// OPDATERET (Rapportér på andres kommentarer). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
+// OPDATERET (nyt navn: FiskoMan). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
 
 "use client";
 
@@ -114,7 +114,7 @@ export default function PostActions({
     // Mobil: åbn telefonens del-menu (Messenger, SMS, Facebook ...)
     if (navigator.share) {
       try {
-        await navigator.share({ url, title: "HookedSpace" });
+        await navigator.share({ url, title: "FiskoMan" });
         return;
       } catch (e) {
         if ((e as Error).name === "AbortError") return; // brugeren lukkede menuen
