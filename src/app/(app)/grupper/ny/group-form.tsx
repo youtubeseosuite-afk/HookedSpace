@@ -1,5 +1,5 @@
 // src/app/(app)/grupper/ny/group-form.tsx
-// OPDATERET (sender dig til den nye gruppes side). Formular til at oprette en gruppe: navn, adresse (slug), beskrivelse, område, offentlig/privat og regler.
+// OPDATERET (nyt navn: FiskoMan). Formular til at oprette en gruppe: navn, adresse (slug), beskrivelse, område, offentlig/privat og regler.
 // Du bliver automatisk admin for gruppen.
 
 "use client";
@@ -145,7 +145,7 @@ export default function GroupForm({ userId }: { userId: string }) {
         <div>
           <label htmlFor="slug" className="mb-1 block text-sm font-medium text-deep-900">Adresse</label>
           <div className="flex items-center rounded-lg border border-mist-100 bg-mist-50 focus-within:border-deep-700 focus-within:bg-white">
-            <span className="whitespace-nowrap pl-3 text-sm text-deep-700">hookedspace.com/g/</span>
+            <span className="whitespace-nowrap pl-3 text-sm text-deep-700">fiskoman.dk/g/</span>
             <input
               id="slug"
               value={effectiveSlug}
