@@ -1,5 +1,5 @@
 // src/app/faq/page.tsx
-// NY FIL. Ofte stillede spørgsmål. Offentlig side. Linker videre til Flex-forklaringen (/flex) og reglerne (/regler).
+// OPDATERET (nyt navn: FiskoMan). Ofte stillede spørgsmål. Offentlig side. Linker videre til Flex-forklaringen (/flex) og reglerne (/regler).
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import InfoPage from "@/components/info-page";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Svar på de mest almindelige spørgsmål om HookedSpace: opslag, grupper, badges, Flex, privatliv og regler.",
+  description: "Svar på de mest almindelige spørgsmål om FiskoMan: opslag, grupper, badges, Flex, privatliv og regler.",
 };
 
 type QA = { q: string; a: React.ReactNode };
@@ -24,10 +24,10 @@ const SECTIONS: { title: string; items: QA[] }[] = [
     title: "Kom i gang",
     items: [
       {
-        q: "Hvad er HookedSpace?",
+        q: "Hvad er FiskoMan?",
         a: "Et socialt netværk for danske lystfiskere. Du kan dele opslag og fangster, følge andre fiskere, være med i grupper og samle badges.",
       },
-      { q: "Koster det noget?", a: "Nej. Det er gratis at oprette en profil og bruge HookedSpace." },
+      { q: "Koster det noget?", a: "Nej. Det er gratis at oprette en profil og bruge FiskoMan." },
       {
         q: "Hvordan opretter jeg en profil?",
         a: (
@@ -108,7 +108,7 @@ const SECTIONS: { title: string; items: QA[] }[] = [
         q: "Hvad er Flex?",
         a: (
           <>
-            Flex er det, man siger, når stangen bøjer. Det er din rating på HookedSpace. Du får Flex, når andre giver dine opslag Knæk og
+            Flex er det, man siger, når stangen bøjer. Det er din rating på FiskoMan. Du får Flex, når andre giver dine opslag Knæk og
             bræk, kommenterer, deler eller følger dig, og når du får badges eller klarer en månedsudfordring.{" "}
             <A href="/flex">Læs hele forklaringen og se, hvem der har mest Flex</A>.
           </>
@@ -161,8 +161,8 @@ const SECTIONS: { title: string; items: QA[] }[] = [
         a: (
           <>
             Skriv til{" "}
-            <a href="mailto:kontakt@hookedspace.com" className="font-semibold text-deep-900 underline">
-              kontakt@hookedspace.com
+            <a href="mailto:kontakt@fiskoman.dk" className="font-semibold text-deep-900 underline">
+              kontakt@fiskoman.dk
             </a>
             .
           </>
