@@ -1,5 +1,5 @@
 // src/app/privatliv/page.tsx
-// OPDATERET (nyt logo). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
+// OPDATERET (nyt navn: FiskoMan). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { LogoBadge } from "@/components/logo";
 // ---------- KONFIG: tjek og ret disse oplysninger ----------
 const CONTROLLER_NAME = "Mick Ogilvie";
 const CONTROLLER_ADDRESS = "Kolding, Danmark";
-const CONTACT_EMAIL = "kontakt@hookedspace.com";
+const CONTACT_EMAIL = "kontakt@fiskoman.dk";
 const SUPABASE_REGION = "EU (Frankfurt, Tyskland)";
 const MIN_AGE = 15;
 const LAST_UPDATED = "16. oktober 2026";
@@ -16,7 +16,7 @@ const LAST_UPDATED = "16. oktober 2026";
 
 export const metadata: Metadata = {
   title: "Privatlivspolitik",
-  description: "Sådan behandler HookedSpace dine personoplysninger.",
+  description: "Sådan behandler FiskoMan dine personoplysninger.",
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -35,7 +35,7 @@ export default function PrivatlivPage() {
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-mist-50">
             <LogoBadge size="md" />
-            HookedSpace
+            FiskoMan
           </Link>
         </div>
       </header>
@@ -47,8 +47,8 @@ export default function PrivatlivPage() {
         <div className="mt-8 space-y-10 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-mist-100 sm:p-8">
           <Section title="1. Hvem er dataansvarlig?">
             <p>
-              HookedSpace drives af {CONTROLLER_NAME}, {CONTROLLER_ADDRESS}. Vi er dataansvarlige for de
-              personoplysninger, du giver os, når du bruger hookedspace.com.
+              FiskoMan drives af {CONTROLLER_NAME}, {CONTROLLER_ADDRESS}. Vi er dataansvarlige for de
+              personoplysninger, du giver os, når du bruger fiskoman.dk.
             </p>
             <p>
               Har du spørgsmål om dine data, kan du skrive til{" "}
@@ -112,7 +112,7 @@ export default function PrivatlivPage() {
           </Section>
 
           <Section title="7. Databehandlere">
-            <p>Vi bruger følgende udbydere til at drive HookedSpace. De må kun behandle data efter vores anvisninger:</p>
+            <p>Vi bruger følgende udbydere til at drive FiskoMan. De må kun behandle data efter vores anvisninger:</p>
             <ul className="list-disc space-y-1 pl-5">
               <li><strong>Supabase</strong> – database, login og billedlagring. Data ligger i {SUPABASE_REGION}.</li>
               <li><strong>Vercel</strong> – hosting af hjemmesiden. Vercel er certificeret under EU-US Data Privacy Framework.</li>
@@ -160,7 +160,7 @@ export default function PrivatlivPage() {
           </Section>
 
           <Section title="10. Alder">
-            <p>Du skal være mindst {MIN_AGE} år for at oprette en profil på HookedSpace.</p>
+            <p>Du skal være mindst {MIN_AGE} år for at oprette en profil på FiskoMan.</p>
           </Section>
 
           <Section title="11. Ændringer">
