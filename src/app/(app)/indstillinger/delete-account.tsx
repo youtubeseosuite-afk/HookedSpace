@@ -1,5 +1,5 @@
 // src/app/(app)/indstillinger/delete-account.tsx
-// OPDATERET (visuel sletningslog trin for trin). "Slet min konto": tæller brugerens data, sletter billeder i Storage,
+// OPDATERET (nyt navn: FiskoMan). "Slet min konto": tæller brugerens data, sletter billeder i Storage,
 // sletter derefter kontoen (profil, opslag, kommentarer, reaktioner, følgere, badges og notifikationer følger med)
 // og logger ud. Hvert trin vises i en log med antal og status.
 
@@ -205,7 +205,7 @@ export default function DeleteAccount() {
         <DeletionLog steps={steps} />
         <div className="rounded-xl bg-reed-300/30 p-4 text-sm text-deep-900">
           <p className="font-semibold">Din konto er slettet.</p>
-          <p className="mt-1">Tak fordi du var med på HookedSpace. Knæk og bræk!</p>
+          <p className="mt-1">Tak fordi du var med på FiskoMan. Knæk og bræk!</p>
         </div>
         <a
           href="/"
