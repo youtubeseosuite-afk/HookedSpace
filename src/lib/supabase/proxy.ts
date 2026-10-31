@@ -1,11 +1,11 @@
 // src/lib/supabase/proxy.ts
-// OPDATERET (/bortvist kan altid ses). Holder login-sessionen frisk ved hver forespørgsel og sender ikke-loggede brugere til /login.
+// OPDATERET (/faq og /regler kan ses uden login). Holder login-sessionen frisk ved hver forespørgsel og sender ikke-loggede brugere til /login.
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Sider man kan se uden at være logget ind
-const PUBLIC_PATHS = ["/", "/login", "/auth", "/privatliv", "/p", "/bortvist"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/privatliv", "/p", "/bortvist", "/faq", "/regler"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((p) => pathname === p || (p !== "/" && pathname.startsWith(p + "/")));
