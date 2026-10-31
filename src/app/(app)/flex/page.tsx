@@ -1,5 +1,5 @@
 // src/app/(app)/flex/page.tsx
-// OPDATERET (ingen døgngrænse, samme stang-ikon). Flex: din egen Flex og niveau, leaderboard (uge, måned, altid; hele landet eller din landsdel),
+// OPDATERET (boksen "Din Flex" er fjernet). Flex: leaderboard (uge, måned, altid; hele landet eller din landsdel),
 // og hvordan man får Flex.
 
 import type { Metadata } from "next";
@@ -8,7 +8,6 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { regionLabel } from "@/lib/regions";
 import { FLEX_LEVELS, FLEX_RULES, flexLevel, formatFlex } from "@/lib/flex";
-import FlexMeter from "@/components/flex-meter";
 import { FlexIcon } from "@/components/flex-badge";
 
 export const metadata: Metadata = { title: "Flex" };
@@ -38,7 +37,7 @@ export default async function FlexPage({ searchParams }: { searchParams: Promise
   const period = PERIODS.find((p) => p.key === sp.periode) ?? PERIODS[1];
   const supabase = await createClient();
 
-  const { data: mine } = await supabase.from("profiles").select("flex, region").eq("id", me.id).single();
+  const { data: mine } = await supabase.from("profiles").select("region").eq("id", me.id).single();
   const myRegion = mine?.region ?? null;
   const local = sp.omraade === "mit" && Boolean(myRegion);
 
@@ -48,7 +47,6 @@ export default async function FlexPage({ searchParams }: { searchParams: Promise
     p_limit: 50,
   });
   const rows = (data ?? []) as Row[];
-  const myIndex = rows.findIndex((r) => r.user_id === me.id);
 
   const href = (patch: Partial<SP>) => {
     const m = { periode: period.key, omraade: local ? "mit" : "alle", ...patch };
@@ -72,16 +70,6 @@ export default async function FlexPage({ searchParams }: { searchParams: Promise
         </h1>
         <p className="text-sm text-deep-700">Når stangen bøjer. Du får Flex, når andre lystfiskere kan lide det, du deler.</p>
       </div>
-
-      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-mist-100">
-        <p className="text-sm font-semibold text-deep-900">Din Flex</p>
-        <FlexMeter points={mine?.flex ?? 0} />
-        {myIndex >= 0 && (
-          <p className="mt-2 text-sm text-deep-700">
-            Du er nr. <span className="font-bold text-deep-950">{myIndex + 1}</span> på listen herunder.
-          </p>
-        )}
-      </section>
 
       {/* Leaderboard */}
       <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-mist-100">
