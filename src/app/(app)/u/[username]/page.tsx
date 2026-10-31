@@ -1,5 +1,5 @@
 // src/app/(app)/u/[username]/page.tsx
-// OPDATERET (menu med Rapportér profil og Bloker). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
+// OPDATERET (Rediger profil er et tandhjul i hjørnet). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
 // fanen Opslag (badges, fiskepas, trofævæg, opslag) og fanen Billeder (galleri med alle brugerens billeder).
 
 import type { Metadata } from "next";
@@ -12,6 +12,7 @@ import { getPosts, type FeedPost } from "@/lib/posts";
 import PostCard from "@/components/post-card";
 import FollowButton from "./follow-button";
 import ProfileMenu from "./profile-menu";
+import FlexMeter from "@/components/flex-meter";
 import FishingPass, { type SpeciesItem, type SpeciesStat } from "@/components/fishing-pass";
 import BadgeList, { type BadgeItem } from "@/components/badge-list";
 import PhotoGallery, { type GalleryImage } from "@/components/photo-gallery";
@@ -88,7 +89,7 @@ export default async function ProfilePage({
   const supabase = await createClient();
   const { data: user } = await supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, city, experience_level, bio")
+    .select("id, username, display_name, avatar_url, city, experience_level, bio, flex")
     .eq("username", username.toLowerCase())
     .maybeSingle();
 
@@ -180,7 +181,17 @@ export default async function ProfilePage({
   return (
     <main className="mx-auto max-w-2xl space-y-4 px-4 py-6 sm:py-8">
       {/* Profilhoved */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-mist-100">
+      <section className="relative rounded-2xl bg-white p-5 shadow-sm ring-1 ring-mist-100">
+        {isMe && (
+          <Link
+            href="/indstillinger"
+            aria-label="Rediger profil"
+            title="Rediger profil"
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-deep-700 hover:bg-mist-100 hover:text-deep-950"
+          >
+            <Settings className="h-5 w-5" aria-hidden />
+          </Link>
+        )}
         <div className="flex items-start gap-4">
           {user.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -190,7 +201,7 @@ export default async function ProfilePage({
               {name.charAt(0).toUpperCase()}
             </span>
           )}
-          <div className="min-w-0 flex-1">
+          <div className={`min-w-0 flex-1 ${isMe ? "pr-8" : ""}`}>
             <h1 className="truncate text-xl font-bold text-deep-950">{name}</h1>
             <p className="text-sm text-deep-700">@{user.username}</p>
             <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -215,6 +226,8 @@ export default async function ProfilePage({
 
         {user.bio && <p className="mt-4 whitespace-pre-wrap text-sm text-deep-900">{user.bio}</p>}
 
+        <FlexMeter points={user.flex ?? 0} />
+
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-mist-100 pt-4">
           <dl className="flex gap-5 text-sm">
             <div>
@@ -231,15 +244,7 @@ export default async function ProfilePage({
             </div>
           </dl>
 
-          {isMe ? (
-            <Link
-              href="/indstillinger"
-              className="flex items-center gap-2 rounded-lg bg-mist-100 px-4 py-2 text-sm font-semibold text-deep-900 hover:bg-mist-50"
-            >
-              <Settings className="h-4 w-4" aria-hidden />
-              Rediger profil
-            </Link>
-          ) : (
+          {isMe ? null : (
             <div className="flex items-center gap-2">
               {iBlocked ? (
                 <span className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">Du har blokeret {name}</span>
