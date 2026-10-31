@@ -1,6 +1,6 @@
 // src/app/admin/layout.tsx
-// NY FIL. Layout for admin-siden: egen topbar og menu, og noindex så Google aldrig indekserer siderne.
-// Kun platform-admins kommer ind (ellers 404). Senere kan admin.hookedspace.com pege hertil.
+// OPDATERET (nyt navn: FiskoMan). Layout for admin-siden: egen topbar og menu, og noindex så Google aldrig indekserer siderne.
+// Kun platform-admins kommer ind (ellers 404). Senere kan admin.fiskoman.dk pege hertil.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { requireSiteAdmin } from "@/lib/supabase/admin";
 import AdminNav from "./admin-nav";
 
 export const metadata: Metadata = {
-  title: { default: "Admin", template: "%s · HookedSpace Admin" },
+  title: { default: "Admin", template: "%s · FiskoMan Admin" },
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 
@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <ShieldAlert className="h-5 w-5" aria-hidden />
             </span>
             <span>
-              HookedSpace <span className="text-red-400">Admin</span>
+              FiskoMan <span className="text-red-400">Admin</span>
             </span>
           </Link>
           <div className="flex items-center gap-3 text-sm">
