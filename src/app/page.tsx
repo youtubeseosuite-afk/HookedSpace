@@ -1,5 +1,5 @@
 // src/app/page.tsx
-// OPDATERET (nyt logo). Offentlig forside for HookedSpace. Loggede brugere sendes direkte til feedet.
+// OPDATERET (links til FAQ og regler i bunden). Offentlig forside for HookedSpace. Loggede brugere sendes direkte til feedet.
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -93,9 +93,17 @@ export default async function Home() {
       <footer className="border-t border-mist-100 px-4 py-6">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 text-sm text-deep-700 sm:flex-row">
           <p>© {new Date().getFullYear()} HookedSpace</p>
-          <Link href="/privatliv" className="hover:underline">
-            Privatlivspolitik
-          </Link>
+          <nav className="flex gap-4">
+            <Link href="/faq" className="hover:underline">
+              FAQ
+            </Link>
+            <Link href="/regler" className="hover:underline">
+              Regler
+            </Link>
+            <Link href="/privatliv" className="hover:underline">
+              Privatlivspolitik
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>
