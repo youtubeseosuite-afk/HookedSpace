@@ -1,5 +1,5 @@
 // src/app/p/[id]/page.tsx
-// OPDATERET (nyt logo). Side for ét opslag (delingslink). Kan ses uden login, hvis opslaget er offentligt.
+// OPDATERET (nyt navn: FiskoMan). Side for ét opslag (delingslink). Kan ses uden login, hvis opslaget er offentligt.
 // Giver preview med billede og tekst, når linket deles på Messenger, Facebook, SMS osv.
 
 import type { Metadata } from "next";
@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         .filter(Boolean)
         .join(" · ")
     : "";
-  const description = (post.body?.slice(0, 160) || catchText || `Se ${name}s opslag på HookedSpace`).trim();
-  const title = catchText ? `${name}: ${catchText}` : `${name} på HookedSpace`;
+  const description = (post.body?.slice(0, 160) || catchText || `Se ${name}s opslag på FiskoMan`).trim();
+  const title = catchText ? `${name}: ${catchText}` : `${name} på FiskoMan`;
   const image = post.images[0];
 
   return {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     robots: post.visibility === "public" ? undefined : { index: false },
     openGraph: {
       type: "article",
-      siteName: "HookedSpace",
+      siteName: "FiskoMan",
       title,
       description,
       url: `/p/${post.id}`,
@@ -57,7 +57,7 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4">
           <Link href={loggedIn ? "/feed" : "/"} className="flex items-center gap-2 font-bold text-mist-50">
             <LogoBadge size="md" />
-            HookedSpace
+            FiskoMan
           </Link>
           {loggedIn ? (
             <Link href="/feed" className="rounded-lg px-4 py-2 text-sm font-semibold text-mist-50 hover:bg-deep-800">
