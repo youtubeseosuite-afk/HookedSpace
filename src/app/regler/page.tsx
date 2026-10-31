@@ -1,5 +1,5 @@
 // src/app/regler/page.tsx
-// NY FIL. Generelle regler for HookedSpace. Offentlig side. Ret datoen i LAST_UPDATED, når reglerne ændres.
+// OPDATERET (nyt navn: FiskoMan). Generelle regler for FiskoMan. Offentlig side. Ret datoen i LAST_UPDATED, når reglerne ændres.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,7 +9,7 @@ const LAST_UPDATED = "31. oktober 2026";
 
 export const metadata: Metadata = {
   title: "Regler",
-  description: "Reglerne for HookedSpace: god tone, fiskeriloven, ærlige opslag og hvad der sker, hvis reglerne brydes.",
+  description: "Reglerne for FiskoMan: god tone, fiskeriloven, ærlige opslag og hvad der sker, hvis reglerne brydes.",
 };
 
 const RULES: { title: string; points: string[] }[] = [
@@ -59,7 +59,7 @@ const RULES: { title: string; points: string[] }[] = [
     points: [
       "Intet pornografisk, voldeligt eller på anden måde stødende indhold.",
       "Intet salg af ulovlige varer, våben eller fredede arter.",
-      "Børn skal kunne være på HookedSpace. Hold indholdet derefter.",
+      "Børn skal kunne være på FiskoMan. Hold indholdet derefter.",
     ],
   },
   {
@@ -78,7 +78,7 @@ export default function ReglerPage() {
       intro={
         <>
           <p>
-            HookedSpace skal være et godt sted for alle, der elsker fiskeri. Derfor har vi nogle få regler. De gælder i opslag,
+            FiskoMan skal være et godt sted for alle, der elsker fiskeri. Derfor har vi nogle få regler. De gælder i opslag,
             kommentarer, profiler og grupper.
           </p>
           <p className="mt-1 text-sm text-deep-700">Senest opdateret: {LAST_UPDATED}</p>
@@ -104,7 +104,7 @@ export default function ReglerPage() {
           <li>Ser du noget, der bryder reglerne, så rapportér det via ••• på opslaget eller profilen. Den, du rapporterer, får ikke at vide, at det var dig.</li>
           <li>Vi kan slette indhold, der bryder reglerne, uden varsel.</li>
           <li>Ved gentagne eller grove brud kan profilen blive bortvist i en periode eller permanent.</li>
-          <li>Er du uenig i en afgørelse, kan du skrive til kontakt@hookedspace.com.</li>
+          <li>Er du uenig i en afgørelse, kan du skrive til kontakt@fiskoman.dk.</li>
         </ul>
       </section>
 
