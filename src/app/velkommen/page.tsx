@@ -1,5 +1,5 @@
 // src/app/velkommen/page.tsx
-// OPDATERET (nyt logo). Velkomstside efter første login. Brugere med færdig profil sendes videre til feedet.
+// OPDATERET (nyt navn: FiskoMan). Velkomstside efter første login. Brugere med færdig profil sendes videre til feedet.
 
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -28,7 +28,7 @@ export default async function VelkommenPage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-deep-900 px-4 py-10">
       <LogoBadge size="xl" className="mb-6" />
-      <h1 className="text-center text-2xl font-bold text-mist-50 sm:text-3xl">Velkommen til HookedSpace</h1>
+      <h1 className="text-center text-2xl font-bold text-mist-50 sm:text-3xl">Velkommen til FiskoMan</h1>
       <p className="mt-2 max-w-sm text-center text-reed-300">
         Fortæl lidt om dig selv, så andre lystfiskere kan finde dig.
       </p>
