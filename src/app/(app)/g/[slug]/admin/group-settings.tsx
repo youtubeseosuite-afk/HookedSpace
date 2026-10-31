@@ -1,5 +1,5 @@
 // src/app/(app)/g/[slug]/admin/group-settings.tsx
-// NY FIL. Gruppens indstillinger: navn, beskrivelse, område og offentlig/privat. Samt "Slet gruppe".
+// OPDATERET (nyt navn: FiskoMan). Gruppens indstillinger: navn, beskrivelse, område og offentlig/privat. Samt "Slet gruppe".
 // Adressen (/g/...) kan ikke ændres, så links til gruppen bliver ved med at virke.
 
 "use client";
@@ -80,7 +80,7 @@ export default function GroupSettings({ group }: { group: Group }) {
         <div>
           <label htmlFor="g-name" className="mb-1 block text-sm font-medium text-deep-900">Navn</label>
           <input id="g-name" value={name} onChange={(e) => setName(e.target.value)} required minLength={3} maxLength={60} className={inputClass} />
-          <p className="mt-1 text-xs text-deep-700">Adressen hookedspace.com/g/{group.slug} ændres ikke.</p>
+          <p className="mt-1 text-xs text-deep-700">Adressen fiskoman.dk/g/{group.slug} ændres ikke.</p>
         </div>
         <div>
           <label htmlFor="g-desc" className="mb-1 block text-sm font-medium text-deep-900">Beskrivelse</label>
