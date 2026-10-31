@@ -1,17 +1,17 @@
 // src/app/layout.tsx
-// NY FIL. Rodlayout for hele appen: sprog, metadata og global CSS.
+// OPDATERET (nyt navn: FiskoMan). Rodlayout for hele appen: sprog, metadata og global CSS.
 
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "HookedSpace – Det sociale netværk for lystfiskere",
-    template: "%s · HookedSpace",
+    default: "FiskoMan – Det sociale netværk for lystfiskere",
+    template: "%s · FiskoMan",
   },
   description:
     "Del dine fangster, følg andre lystfiskere og byg din trofævæg. Et fællesskab for danske lystfiskere.",
-  metadataBase: new URL("https://hookedspace.com"),
+  metadataBase: new URL("https://fiskoman.dk"),
 };
 
 export const viewport: Viewport = {
