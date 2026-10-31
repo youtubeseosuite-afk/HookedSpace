@@ -1,5 +1,5 @@
 // src/components/info-page.tsx
-// NY FIL. Fælles ramme til offentlige infosider (FAQ og regler): topbar med logo, indhold og links i bunden.
+// OPDATERET (nyt navn: FiskoMan). Fælles ramme til offentlige infosider (FAQ og regler): topbar med logo, indhold og links i bunden.
 
 import Link from "next/link";
 import { LogoBadge } from "@/components/logo";
@@ -19,7 +19,7 @@ export default function InfoPage({
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-mist-50">
             <LogoBadge size="md" />
-            HookedSpace
+            FiskoMan
           </Link>
           <Link href="/feed" className="rounded-lg px-4 py-2 text-sm font-semibold text-mist-50 hover:bg-deep-800">
             Til feedet
@@ -44,8 +44,8 @@ export default function InfoPage({
           <Link href="/privatliv" className="hover:underline">
             Privatlivspolitik
           </Link>
-          <a href="mailto:kontakt@hookedspace.com" className="hover:underline">
-            kontakt@hookedspace.com
+          <a href="mailto:kontakt@fiskoman.dk" className="hover:underline">
+            kontakt@fiskoman.dk
           </a>
         </nav>
       </footer>
