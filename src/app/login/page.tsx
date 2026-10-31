@@ -1,5 +1,5 @@
 // src/app/login/page.tsx
-// OPDATERET (nyt logo). Login-side. Læser ?next= og ?fejl= fra URL'en og viser login-formularen.
+// OPDATERET (nyt navn: FiskoMan). Login-side. Læser ?next= og ?fejl= fra URL'en og viser login-formularen.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -22,7 +22,7 @@ export default async function LoginPage({
     <main className="flex min-h-dvh flex-col items-center justify-center bg-deep-900 px-4 py-10">
       <Link href="/" className="mb-8 flex items-center gap-3 text-mist-50">
         <LogoBadge size="lg" />
-        <span className="text-2xl font-bold tracking-tight">HookedSpace</span>
+        <span className="text-2xl font-bold tracking-tight">FiskoMan</span>
       </Link>
 
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl sm:p-8">
