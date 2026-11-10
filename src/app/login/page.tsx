@@ -1,5 +1,5 @@
 // src/app/login/page.tsx
-// OPDATERET (nyt navn: FiskoMan). Login-side. Læser ?next= og ?fejl= fra URL'en og viser login-formularen.
+// OPDATERET (?opret=1 åbner fanen Opret profil). Login-side. Læser ?next= og ?fejl= fra URL'en og viser login-formularen.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; fejl?: string }>;
+  searchParams: Promise<{ next?: string; fejl?: string; opret?: string }>;
 }) {
-  const { next, fejl } = await searchParams;
+  const { next, fejl, opret } = await searchParams;
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/feed";
 
   return (
@@ -26,7 +26,7 @@ export default async function LoginPage({
       </Link>
 
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl sm:p-8">
-        <LoginForm next={safeNext} callbackError={fejl === "login"} />
+        <LoginForm next={safeNext} callbackError={fejl === "login"} confirmError={fejl === "bekraeft"} startInSignup={opret === "1"} />
       </div>
 
       <p className="mt-6 max-w-sm text-center text-sm text-reed-300">
