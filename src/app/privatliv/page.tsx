@@ -1,5 +1,5 @@
 // src/app/privatliv/page.tsx
-// OPDATERET (nyt navn: FiskoMan). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
+// OPDATERET (gæster kan se offentligt indhold). Privatlivspolitik (GDPR). Offentlig side. Ret oplysningerne i KONFIG øverst, før siden går live.
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,7 +11,7 @@ const CONTROLLER_ADDRESS = "Kolding, Danmark";
 const CONTACT_EMAIL = "kontakt@fiskoman.dk";
 const SUPABASE_REGION = "EU (Frankfurt, Tyskland)";
 const MIN_AGE = 15;
-const LAST_UPDATED = "16. oktober 2026";
+const LAST_UPDATED = "10. november 2026";
 // -----------------------------------------------------------
 
 export const metadata: Metadata = {
@@ -83,9 +83,18 @@ export default function PrivatlivPage() {
 
           <Section title="4. Hvem kan se dine oplysninger?">
             <ul className="list-disc space-y-1 pl-5">
-              <li>Din profil (navn, brugernavn, by, erfaring, om mig og profilbillede) kan ses af andre brugere.</li>
+              <li>Din profil (navn, brugernavn, by, erfaring, om mig, profilbillede, Flex og badges) kan ses af alle, også besøgende uden login.</li>
               <li>Dine opslag kan ses af dem, du vælger: <strong>Offentlig</strong>, <strong>Følgere</strong> eller <strong>Kun mig</strong>.</li>
-              <li>Offentlige opslag kan ses af alle, også uden login, og kan deles med et link. De kan derfor også blive fundet af søgemaskiner.</li>
+              <li>
+                <strong>Offentlig</strong> betyder alle, også besøgende uden login. Offentlige opslag vises i det åbne feed, på din profil og
+                kan deles med et link, fx på Facebook. Det gælder også opslag, du har delt som offentlige før denne ændring.
+              </li>
+              <li>
+                Delte opslag og offentlige grupper kan blive fundet af søgemaskiner som Google. Feedet og profilerne beder vi søgemaskiner om
+                ikke at vise.
+              </li>
+              <li>Opslag i en privat gruppe kan kun ses af gruppens medlemmer.</li>
+              <li>Vil du ikke have, at et opslag kan ses af alle, kan du vælge <strong>Følgere</strong> eller <strong>Kun mig</strong>, eller slette det.</li>
               <li>Din email bliver aldrig vist for andre brugere.</li>
               <li>Billeder gemmes med lange, tilfældige adresser, som ikke kan gættes.</li>
             </ul>
