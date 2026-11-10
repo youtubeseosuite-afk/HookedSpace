@@ -1,5 +1,5 @@
 // src/app/login/login-form.tsx
-// OPDATERET (nyt navn: FiskoMan). Login-formular: log ind / opret profil med email og adgangskode, eller med Google.
+// OPDATERET (kan starte på fanen Opret profil). Login-formular: log ind / opret profil med email og adgangskode, eller med Google.
 
 "use client";
 
@@ -21,14 +21,28 @@ function translateError(message: string): string {
   return "Noget gik galt. Prøv igen.";
 }
 
-export default function LoginForm({ next, callbackError }: { next: string; callbackError: boolean }) {
+export default function LoginForm({
+  next,
+  callbackError,
+  confirmError = false,
+  startInSignup = false,
+}: {
+  next: string;
+  callbackError: boolean;
+  confirmError?: boolean;
+  startInSignup?: boolean;
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("login");
+  const [mode, setMode] = useState<Mode>(startInSignup ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
-    callbackError ? "Login mislykkedes. Prøv igen." : null
+    confirmError
+      ? "Linket i mailen er udløbet eller allerede brugt. Prøv at logge ind. Virker det ikke, så opret dig igen for at få en ny mail."
+      : callbackError
+        ? "Login mislykkedes. Prøv igen."
+        : null
   );
   const [info, setInfo] = useState<string | null>(null);
 
