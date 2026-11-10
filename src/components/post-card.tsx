@@ -1,5 +1,5 @@
 // src/components/post-card.tsx
-// OPDATERET (menu med Rapportér og Bloker på andres opslag). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
+// OPDATERET (viser "redigeret" på opslag, der er rettet). Viser ét opslag: forfatter, følelse, taggede venner, sted, tekst, fangstdetaljer, billeder (1–5), reaktioner, kommentarer og deling.
 
 import Link from "next/link";
 import { Globe, Users, Lock, Fish, Trophy, MapPin, Repeat2, ChevronRight } from "lucide-react";
@@ -7,6 +7,7 @@ import type { FeedPost } from "@/lib/posts";
 import { getFeeling } from "@/lib/feelings";
 import PostActions from "@/components/post-actions";
 import PostMenu from "@/components/post-menu";
+import FlexBadge from "@/components/flex-badge";
 
 function Avatar({ name, url, small = false }: { name: string; url: string | null; small?: boolean }) {
   const size = small ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm";
@@ -124,6 +125,11 @@ function PostHeader({
           <Link href={`/u/${post.author.username}`} className="font-semibold text-deep-950 hover:underline">
             {name}
           </Link>
+          {typeof post.author.flex === "number" && (
+            <span className="ml-1.5 inline-block align-[-2px]">
+              <FlexBadge points={post.author.flex} size="xs" />
+            </span>
+          )}
           {post.group && (
             <>
               <ChevronRight className="mx-0.5 inline h-3.5 w-3.5 align-[-2px] text-deep-700" aria-label="i gruppen" />
@@ -155,6 +161,7 @@ function PostHeader({
         <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-deep-700">
           <Link href={`/p/${post.id}`} className="hover:underline">
             <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
+            {post.edited_at && <span title={`Redigeret ${new Date(post.edited_at).toLocaleString("da-DK")}`}> · redigeret</span>}
           </Link>
           <span aria-hidden>·</span>
           <VisIcon className="h-3.5 w-3.5" aria-label={visLabel} />
@@ -231,6 +238,7 @@ export default function PostCard({ post }: { post: FeedPost }) {
     <PostMenu
       postId={post.id}
       isOwner={isOwner}
+      canEdit={isOwner && !post.is_share}
       authorId={post.author.id}
       authorName={post.author.display_name ?? post.author.username}
     />
