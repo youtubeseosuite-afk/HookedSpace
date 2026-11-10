@@ -1,12 +1,13 @@
 // src/app/(app)/g/[slug]/page.tsx
-// OPDATERET (Rapportér gruppe). Gruppeside: navn, beskrivelse, regler, medlemskab (anmod / afventer / medlem) og gruppens opslag.
+// OPDATERET (gæster kan se offentlige grupper; Bliv medlem beder dem oprette en profil). Gruppeside: navn, beskrivelse, regler, medlemskab (anmod / afventer / medlem) og gruppens opslag.
 // Private grupper: kun medlemmer kan se opslagene. Admins ser antal ventende anmodninger.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Globe, Lock, Users, MapPin, ScrollText, ImagePlus, Shield } from "lucide-react";
-import { requireProfile } from "@/lib/auth";
+import { getCurrentProfile, requireProfile } from "@/lib/auth";
+import GuestJoinButton from "@/components/guest-join-button";
 import { createClient } from "@/lib/supabase/server";
 import { getPosts } from "@/lib/posts";
 import PostCard from "@/components/post-card";
@@ -29,7 +30,9 @@ export default async function GroupPage({
   params: Promise<Params>;
   searchParams: Promise<{ foer?: string }>;
 }) {
-  const me = await requireProfile();
+  // Gæster (ikke logget ind) må gerne se gruppen
+  const { userId } = await getCurrentProfile();
+  const meId = userId ? (await requireProfile()).id : null;
   const { slug } = await params;
   const { foer } = await searchParams;
   const before = foer && !Number.isNaN(Date.parse(foer)) ? foer : undefined;
@@ -44,12 +47,9 @@ export default async function GroupPage({
 
   const [{ data: rules }, { data: membership }] = await Promise.all([
     supabase.from("group_rules").select("id, title, body").eq("group_id", group.id).order("position"),
-    supabase
-      .from("group_members")
-      .select("role, status")
-      .eq("group_id", group.id)
-      .eq("user_id", me.id)
-      .maybeSingle(),
+    meId
+      ? supabase.from("group_members").select("role, status").eq("group_id", group.id).eq("user_id", meId).maybeSingle()
+      : Promise.resolve({ data: null as { role: string; status: "pending" | "active" } | null }),
   ]);
 
   const status: "none" | "pending" | "active" = membership?.status ?? "none";
@@ -109,15 +109,19 @@ export default async function GroupPage({
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-deep-900">{group.description}</p>
           )}
 
-          <JoinPanel
-            groupId={group.id}
-            userId={me.id}
-            status={status}
-            isAdmin={isAdmin}
-            rules={(rules ?? []) as { id: string; title: string; body: string | null }[]}
-          />
+          {meId ? (
+            <JoinPanel
+              groupId={group.id}
+              userId={meId}
+              status={status}
+              isAdmin={isAdmin}
+              rules={(rules ?? []) as { id: string; title: string; body: string | null }[]}
+            />
+          ) : (
+            <GuestJoinButton label="Bliv medlem" reason={`Opret en profil for at blive medlem af ${group.name}`} />
+          )}
 
-          {!isAdmin && (
+          {meId && !isAdmin && (
             <div className="flex justify-end">
               <ReportButton targetType="group" targetId={group.id} label="Rapportér gruppe" />
             </div>
