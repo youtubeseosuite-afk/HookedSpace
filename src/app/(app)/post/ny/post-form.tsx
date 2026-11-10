@@ -1,5 +1,5 @@
 // src/app/(app)/post/ny/post-form.tsx
-// OPDATERET (forklaring på hvem der kan se opslaget). Opslagsformularen: tekst, op til 5 billeder, følelse, sted, tag venner, valgfri fangstdetaljer og synlighed.
+// OPDATERET (bruges også til at redigere et opslag). Opslagsformularen: tekst, op til 5 billeder, følelse, sted, tag venner, valgfri fangstdetaljer og synlighed.
 
 "use client";
 
@@ -16,7 +16,25 @@ export type Friend = { id: string; username: string; display_name: string | null
 
 type Panel = "feeling" | "location" | "tags" | "catch" | null;
 type Visibility = "public" | "followers" | "private";
-type PickedImage = CompressedImage & { id: string; previewUrl: string };
+type NewImage = CompressedImage & { kind: "new"; id: string; previewUrl: string };
+type OldImage = { kind: "old"; id: string; storagePath: string; previewUrl: string; width: number | null; height: number | null };
+type PickedImage = NewImage | OldImage;
+
+// Et eksisterende opslag, der redigeres
+export type EditablePost = {
+  id: string;
+  body: string | null;
+  feeling: FeelingKey | null;
+  location_name: string | null;
+  visibility: Visibility;
+  species_id: number | null;
+  weight_kg: number | null;
+  length_cm: number | null;
+  released: boolean | null;
+  is_trophy: boolean;
+  images: { id: string; storage_path: string; url: string; width: number | null; height: number | null }[];
+  tagged: string[];
+};
 
 const MAX_IMAGES = 5;
 
@@ -50,6 +68,7 @@ export default function PostForm({
   species,
   friends,
   group = null,
+  existing = null,
 }: {
   userId: string;
   displayName: string;
@@ -57,26 +76,39 @@ export default function PostForm({
   species: Species[];
   friends: Friend[];
   group?: PostGroup | null;
+  existing?: EditablePost | null;
 }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const [body, setBody] = useState("");
-  const [images, setImages] = useState<PickedImage[]>([]);
+  const fmt = (n: number | null) => (n == null ? "" : String(n).replace(".", ","));
+  const [body, setBody] = useState(existing?.body ?? "");
+  const [images, setImages] = useState<PickedImage[]>(
+    (existing?.images ?? []).map((i) => ({
+      kind: "old" as const,
+      id: i.id,
+      storagePath: i.storage_path,
+      previewUrl: i.url,
+      width: i.width,
+      height: i.height,
+    }))
+  );
   const [processing, setProcessing] = useState(false);
-  const [feeling, setFeeling] = useState<FeelingKey | null>(null);
-  const [location, setLocation] = useState("");
-  const [tagged, setTagged] = useState<string[]>([]);
+  const [feeling, setFeeling] = useState<FeelingKey | null>(existing?.feeling ?? null);
+  const [location, setLocation] = useState(existing?.location_name ?? "");
+  const [tagged, setTagged] = useState<string[]>(existing?.tagged ?? []);
   const [friendSearch, setFriendSearch] = useState("");
-  const [visibility, setVisibility] = useState<Visibility>("public");
+  const [visibility, setVisibility] = useState<Visibility>(existing?.visibility ?? "public");
   const [panel, setPanel] = useState<Panel>(null);
 
-  const [isCatch, setIsCatch] = useState(false);
-  const [speciesId, setSpeciesId] = useState("");
-  const [weight, setWeight] = useState("");
-  const [length, setLength] = useState("");
-  const [released, setReleased] = useState<"" | "ja" | "nej">("");
-  const [isTrophy, setIsTrophy] = useState(false);
+  const [isCatch, setIsCatch] = useState(Boolean(existing?.species_id));
+  const [speciesId, setSpeciesId] = useState(existing?.species_id ? String(existing.species_id) : "");
+  const [weight, setWeight] = useState(fmt(existing?.weight_kg ?? null));
+  const [length, setLength] = useState(fmt(existing?.length_cm ?? null));
+  const [released, setReleased] = useState<"" | "ja" | "nej">(
+    existing?.released == null ? "" : existing.released ? "ja" : "nej"
+  );
+  const [isTrophy, setIsTrophy] = useState(existing?.is_trophy ?? false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +116,7 @@ export default function PostForm({
   // Ryd preview-URL'er op når komponenten forsvinder
   const imagesRef = useRef(images);
   imagesRef.current = images;
-  useEffect(() => () => imagesRef.current.forEach((i) => URL.revokeObjectURL(i.previewUrl)), []);
+  useEffect(() => () => imagesRef.current.forEach((i) => i.kind === "new" && URL.revokeObjectURL(i.previewUrl)), []);
 
   const feelingObj = getFeeling(feeling);
   const taggedFriends = friends.filter((f) => tagged.includes(f.id));
@@ -121,7 +153,7 @@ export default function PostForm({
     for (const file of files) {
       try {
         const c = await compressImage(file);
-        added.push({ ...c, id: crypto.randomUUID(), previewUrl: URL.createObjectURL(c.blob) });
+        added.push({ ...c, kind: "new", id: crypto.randomUUID(), previewUrl: URL.createObjectURL(c.blob) });
       } catch {
         setError("Et af billederne kunne ikke læses. Prøv et JPG- eller PNG-billede.");
       }
@@ -134,7 +166,7 @@ export default function PostForm({
   function removeImage(id: string) {
     setImages((cur) => {
       const img = cur.find((i) => i.id === id);
-      if (img) URL.revokeObjectURL(img.previewUrl);
+      if (img?.kind === "new") URL.revokeObjectURL(img.previewUrl);
       return cur.filter((i) => i.id !== id);
     });
   }
@@ -157,6 +189,11 @@ export default function PostForm({
 
     setSubmitting(true);
     const supabase = createClient();
+
+    if (existing) {
+      await saveChanges(supabase, existing, text);
+      return;
+    }
 
     const { data: post, error: postError } = await supabase
       .from("posts")
@@ -186,6 +223,7 @@ export default function PostForm({
     try {
       for (let i = 0; i < images.length; i++) {
         const img = images[i];
+        if (img.kind !== "new") continue;
         const path = `${userId}/${post.id}/${i}-${crypto.randomUUID()}.${img.ext}`;
         const { error: upErr } = await supabase.storage
           .from("post-images")
@@ -220,6 +258,87 @@ export default function PostForm({
     }
 
     router.push(group ? `/g/${group.slug}` : "/feed");
+    router.refresh();
+  }
+
+  // Gem ændringer i et eksisterende opslag
+  async function saveChanges(supabase: ReturnType<typeof createClient>, post: EditablePost, text: string) {
+    const postId = post.id;
+
+    const { error: updErr } = await supabase
+      .from("posts")
+      .update({
+        body: text || null,
+        feeling,
+        location_name: location.trim() || null,
+        ...(group ? {} : { visibility }),
+        species_id: isCatch ? Number(speciesId) : null,
+        weight_kg: isCatch ? parseDecimal(weight) : null,
+        length_cm: isCatch ? parseDecimal(length) : null,
+        released: isCatch && released !== "" ? released === "ja" : null,
+        is_trophy: isCatch ? isTrophy : false,
+        edited_at: new Date().toISOString(),
+      })
+      .eq("id", postId);
+    if (updErr) {
+      setError("Ændringerne kunne ikke gemmes. Prøv igen.");
+      setSubmitting(false);
+      return;
+    }
+
+    // Billeder: kun hvis noget er fjernet, tilføjet eller flyttet
+    const before = post.images.map((i) => i.id).join(",");
+    const after = images.map((i) => i.id).join(",");
+    if (before !== after) {
+      const removed = post.images.filter((o) => !images.some((i) => i.kind === "old" && i.id === o.id));
+      const uploaded = new Map<string, string>();
+      try {
+        for (const img of images) {
+          if (img.kind !== "new") continue;
+          const path = `${userId}/${postId}/${crypto.randomUUID()}.${img.ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("post-images")
+            .upload(path, img.blob, { contentType: img.blob.type, cacheControl: "31536000" });
+          if (upErr) throw upErr;
+          uploaded.set(img.id, path);
+        }
+        // Byg billedlisten op igen i den nye rækkefølge
+        const { error: delErr } = await supabase.from("post_images").delete().eq("post_id", postId);
+        if (delErr) throw delErr;
+        if (images.length > 0) {
+          const { error: insErr } = await supabase.from("post_images").insert(
+            images.map((img, i) => ({
+              post_id: postId,
+              user_id: userId,
+              storage_path: img.kind === "old" ? img.storagePath : uploaded.get(img.id)!,
+              width: img.width,
+              height: img.height,
+              position: i,
+            }))
+          );
+          if (insErr) throw insErr;
+        }
+      } catch {
+        if (uploaded.size) await supabase.storage.from("post-images").remove([...uploaded.values()]);
+        setError("Billederne kunne ikke gemmes. Prøv igen.");
+        setSubmitting(false);
+        router.refresh();
+        return;
+      }
+      if (removed.length) await supabase.storage.from("post-images").remove(removed.map((r) => r.storage_path));
+    }
+
+    // Tags: tilføj nye og fjern dem, der er fjernet
+    const addTags = tagged.filter((t) => !post.tagged.includes(t));
+    const removeTags = post.tagged.filter((t) => !tagged.includes(t));
+    if (addTags.length) {
+      await supabase.from("post_tags").insert(addTags.map((tagged_user_id) => ({ post_id: postId, tagged_user_id })));
+    }
+    if (removeTags.length) {
+      await supabase.from("post_tags").delete().eq("post_id", postId).in("tagged_user_id", removeTags);
+    }
+
+    router.push(`/p/${postId}`);
     router.refresh();
   }
 
@@ -512,7 +631,7 @@ export default function PostForm({
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-deep-900 py-2.5 text-sm font-semibold text-mist-50 transition hover:bg-deep-800 disabled:opacity-60"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-          {submitting ? "Deler..." : "Del opslag"}
+          {existing ? (submitting ? "Gemmer..." : "Gem ændringer") : submitting ? "Deler..." : "Del opslag"}
         </button>
       </div>
     </div>
