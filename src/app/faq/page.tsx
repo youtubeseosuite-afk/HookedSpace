@@ -1,5 +1,5 @@
 // src/app/faq/page.tsx
-// OPDATERET (nyt navn: FiskoMan). Ofte stillede spørgsmål. Offentlig side. Linker videre til Flex-forklaringen (/flex) og reglerne (/regler).
+// OPDATERET (Offentlig betyder også gæster uden login). Ofte stillede spørgsmål. Offentlig side. Linker videre til Flex-forklaringen (/flex) og reglerne (/regler).
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -29,6 +29,10 @@ const SECTIONS: { title: string; items: QA[] }[] = [
       },
       { q: "Koster det noget?", a: "Nej. Det er gratis at oprette en profil og bruge FiskoMan." },
       {
+        q: "Kan jeg kigge uden at oprette en profil?",
+        a: "Ja. Du kan se de nyeste offentlige opslag, profiler og offentlige grupper uden login. For at give Knæk og bræk, kommentere, følge andre eller dele dine egne fangster skal du oprette en gratis profil.",
+      },
+      {
         q: "Hvordan opretter jeg en profil?",
         a: (
           <>
@@ -52,7 +56,7 @@ const SECTIONS: { title: string; items: QA[] }[] = [
       },
       {
         q: "Hvem kan se mine opslag?",
-        a: "Du vælger selv for hvert opslag: Offentlig (alle), Følgere (kun dem der følger dig) eller Privat (kun dig). Opslag i en gruppe følger gruppen: i en privat gruppe kan kun medlemmer se dem.",
+        a: "Du vælger selv for hvert opslag: Offentlig (alle, også besøgende uden login), Følgere (kun dem der følger dig) eller Kun mig. Opslag i en gruppe følger gruppen: i en privat gruppe kan kun medlemmer se dem.",
       },
       {
         q: "Bliver min placering vist på billederne?",
