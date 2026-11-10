@@ -1,5 +1,5 @@
 // src/components/post-actions.tsx
-// OPDATERET (nyt navn: FiskoMan). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
+// OPDATERET (gæster får en opfordring til at oprette profil, når de trykker). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
 
 "use client";
 
@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageCircle, Send, Trash2, Loader2, Share2, Check, Repeat2, Link2, Flag } from "lucide-react";
 import ReportDialog from "@/components/report-dialog";
+import { openJoinPrompt } from "@/components/join-prompt";
 import { createClient } from "@/lib/supabase/client";
 
 type Comment = {
@@ -144,7 +145,11 @@ export default function PostActions({
   const [error, setError] = useState<string | null>(null);
 
   async function toggleReaction() {
-    if (!viewerId || reactionBusy) return;
+    if (!viewerId) {
+      openJoinPrompt("Opret en profil for at give Knæk og bræk");
+      return;
+    }
+    if (reactionBusy) return;
     const next = !reacted;
     setReacted(next);
     setReactionCount((c) => c + (next ? 1 : -1));
@@ -230,7 +235,6 @@ export default function PostActions({
         <button
           type="button"
           onClick={toggleReaction}
-          disabled={!viewerId}
           aria-pressed={reacted}
           className={`flex flex-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1 py-2 text-[13px] font-semibold sm:px-2 sm:text-sm transition hover:bg-mist-50 ${
             reacted ? "text-lure-500" : "text-deep-700"
@@ -397,6 +401,16 @@ export default function PostActions({
 
           {comments && comments.length === 0 && !loading && (
             <p className="text-sm text-deep-700">Ingen kommentarer endnu. Skriv den første.</p>
+          )}
+
+          {!viewerId && (
+            <button
+              type="button"
+              onClick={() => openJoinPrompt("Opret en profil for at kommentere")}
+              className="w-full rounded-2xl bg-mist-100 px-4 py-2.5 text-left text-sm text-deep-700 hover:bg-mist-50"
+            >
+              Log ind eller opret en profil for at kommentere…
+            </button>
           )}
 
           {viewerId && (
