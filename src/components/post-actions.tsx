@@ -1,5 +1,5 @@
 // src/components/post-actions.tsx
-// OPDATERET (gæster får en opfordring til at oprette profil, når de trykker). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
+// OPDATERET (gæster får en opfordring til at oprette profil; "Offentlig" forklaret ved deling). Bunden af et opslag: "Knæk og bræk"-reaktion, antal, kommentarer og deling.
 
 "use client";
 
@@ -309,7 +309,7 @@ export default function PostActions({
               aria-label="Hvem kan se delingen"
               className="rounded-lg border border-mist-100 bg-white px-2 py-2 text-sm text-deep-900 outline-none focus:border-deep-700"
             >
-              <option value="public">Offentlig</option>
+              <option value="public">Offentlig (alle, også uden login)</option>
               <option value="followers">Følgere</option>
               <option value="private">Kun mig</option>
             </select>
