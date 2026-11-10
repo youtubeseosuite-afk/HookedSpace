@@ -1,5 +1,5 @@
 // src/lib/posts.ts
-// OPDATERET (rangeret feed "Anbefalet" via ranked_feed i databasen, med begrundelse og variation). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
+// OPDATERET (henter edited_at, så redigerede opslag kan markeres). Henter opslag (nyeste først, 10 ad gangen) og bygger billed-URL'er.
 // Row Level Security i databasen bestemmer, hvilke opslag brugeren må se.
 
 import { cache } from "react";
@@ -18,7 +18,8 @@ export type FeedPost = {
   is_pr: boolean;
   is_new_species: boolean;
   created_at: string;
-  author: { id: string; username: string; display_name: string | null; avatar_url: string | null };
+  edited_at: string | null;
+  author: { id: string; username: string; display_name: string | null; avatar_url: string | null; flex?: number };
   species: { name: string } | null;
   images: { url: string; width: number | null; height: number | null }[];
   tagged: { id: string; username: string; display_name: string | null }[];
@@ -39,9 +40,9 @@ export type FeedPost = {
 export const FEED_PAGE_SIZE = 10;
 
 const POST_SELECT = `
-  id, body, feeling, location_name, visibility, weight_kg, length_cm, released, is_trophy, created_at,
+  id, body, feeling, location_name, visibility, weight_kg, length_cm, released, is_trophy, created_at, edited_at,
   is_share, shared_post_id, is_pr, is_new_species,
-  author:profiles!posts_user_id_fkey ( id, username, display_name, avatar_url ),
+  author:profiles!posts_user_id_fkey ( id, username, display_name, avatar_url, flex ),
   species ( name ),
   post_images ( storage_path, width, height, position ),
   post_tags ( tagged:profiles!post_tags_tagged_user_id_fkey ( id, username, display_name ) ),
