@@ -1,12 +1,13 @@
 // src/app/(app)/u/[username]/page.tsx
-// OPDATERET (Flex-tallet linker til Flex-forklaringen). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
+// OPDATERET (gæster kan se profilen; Følg beder dem oprette en profil). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
 // fanen Opslag (badges, fiskepas, trofævæg, opslag) og fanen Billeder (galleri med alle brugerens billeder).
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Trophy, Fish, Settings } from "lucide-react";
-import { requireProfile } from "@/lib/auth";
+import { getCurrentProfile, requireProfile } from "@/lib/auth";
+import GuestJoinButton from "@/components/guest-join-button";
 import { createClient } from "@/lib/supabase/server";
 import { getPosts, type FeedPost } from "@/lib/posts";
 import PostCard from "@/components/post-card";
@@ -30,7 +31,8 @@ const GALLERY_PAGE = 30;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { username } = await params;
-  return { title: `@${username}` };
+  // Profiler skal ikke i Google
+  return { title: `@${username}`, robots: { index: false, follow: true } };
 }
 
 function formatNumber(n: number) {
@@ -78,7 +80,9 @@ export default async function ProfilePage({
   params: Promise<Params>;
   searchParams: Promise<{ foer?: string; fane?: string }>;
 }) {
-  const me = await requireProfile();
+  // Gæster (ikke logget ind) må gerne se profilen
+  const { userId } = await getCurrentProfile();
+  const meId = userId ? (await requireProfile()).id : null;
   const { username } = await params;
   const { foer, fane } = await searchParams;
   const before = foer && !Number.isNaN(Date.parse(foer)) ? foer : undefined;
@@ -94,7 +98,7 @@ export default async function ProfilePage({
 
   if (!user) notFound();
 
-  const isMe = user.id === me.id;
+  const isMe = user.id === meId;
   const name = user.display_name ?? user.username;
 
   const [
@@ -116,8 +120,12 @@ export default async function ProfilePage({
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user.id),
     supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user.id),
     supabase.from("posts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("follows").select("follower_id").eq("follower_id", me.id).eq("following_id", user.id).maybeSingle(),
-    supabase.from("follows").select("follower_id").eq("follower_id", user.id).eq("following_id", me.id).maybeSingle(),
+    meId
+      ? supabase.from("follows").select("follower_id").eq("follower_id", meId).eq("following_id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    meId
+      ? supabase.from("follows").select("follower_id").eq("follower_id", user.id).eq("following_id", meId).maybeSingle()
+      : Promise.resolve({ data: null }),
     showExtras ? getPosts({ userId: user.id, trophiesOnly: true, limit: 9 }) : Promise.resolve(null),
     tab === "opslag" ? getPosts({ userId: user.id, before }) : Promise.resolve(null),
     showExtras ? supabase.from("species").select("id, name, water_type").order("name") : Promise.resolve(null),
@@ -146,9 +154,9 @@ export default async function ProfilePage({
         })()
       : Promise.resolve(null),
     // Har jeg blokeret denne bruger?
-    isMe
+    isMe || !meId
       ? Promise.resolve(null)
-      : supabase.from("blocks").select("blocker_id").eq("blocker_id", me.id).eq("blocked_id", user.id).maybeSingle(),
+      : supabase.from("blocks").select("blocker_id").eq("blocker_id", meId).eq("blocked_id", user.id).maybeSingle(),
   ]);
 
   // Galleri
@@ -250,12 +258,14 @@ export default async function ProfilePage({
             </div>
           </dl>
 
-          {isMe ? null : (
+          {!meId ? (
+            <GuestJoinButton label="Følg" reason={`Opret en profil for at følge ${name}`} />
+          ) : isMe ? null : (
             <div className="flex items-center gap-2">
               {iBlocked ? (
                 <span className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">Du har blokeret {name}</span>
               ) : (
-                <FollowButton myId={me.id} targetId={user.id} initiallyFollowing={iFollow} followsMe={followsMe} />
+                <FollowButton myId={meId} targetId={user.id} initiallyFollowing={iFollow} followsMe={followsMe} />
               )}
               <ProfileMenu userId={user.id} name={name} initiallyBlocked={iBlocked} />
             </div>
