@@ -1,10 +1,11 @@
 // src/app/admin/page.tsx
-// NY FIL. Admin-overblik: nøgletal, nye medlemmer pr. dag (14 dage), seneste medlemmer og åbne rapporter.
+// OPDATERET (boksen "Lige nu" med besøgende i realtid). Admin-overblik: nøgletal, nye medlemmer pr. dag (14 dage), seneste medlemmer og åbne rapporter.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Users, FileText, MessageCircle, Flag, Ban, UsersRound, Activity } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import LiveVisitors from "./live-visitors";
 
 export const metadata: Metadata = { title: "Overblik" };
 
@@ -114,6 +115,8 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-deep-900">Overblik</h1>
+
+      <LiveVisitors />
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={Users} label="Medlemmer" value={users.count ?? 0} sub={`+${users7.count ?? 0} de sidste 7 dage`} href="/admin/medlemmer" />
