@@ -1,5 +1,5 @@
 // src/components/post-menu.tsx
-// OPDATERET (Rapportér og Bloker på andres opslag). Menu (•••) på opslag. Egne opslag: "Slet opslag".
+// OPDATERET (Rediger opslag). Menu (•••) på opslag. Egne opslag: "Rediger opslag" og "Slet opslag".
 // Andres opslag: "Rapportér opslag" og "Bloker <navn>". Sletter først billederne i Storage, derefter opslaget.
 // Kommentarer, reaktioner, tags og notifikationer slettes automatisk med.
 
@@ -7,7 +7,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { MoreHorizontal, Trash2, Loader2, Flag, UserX } from "lucide-react";
+import Link from "next/link";
+import { MoreHorizontal, Trash2, Loader2, Flag, UserX, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { blockUser } from "@/lib/blocks";
 import ReportDialog from "@/components/report-dialog";
@@ -15,11 +16,13 @@ import ReportDialog from "@/components/report-dialog";
 export default function PostMenu({
   postId,
   isOwner = true,
+  canEdit = false,
   authorId,
   authorName,
 }: {
   postId: string;
   isOwner?: boolean;
+  canEdit?: boolean;
   authorId?: string;
   authorName?: string;
 }) {
@@ -114,6 +117,17 @@ export default function PostMenu({
       {open && (
         <div className="absolute right-0 top-9 z-20 w-56 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-mist-100">
           {isOwner ? (
+            <>
+            {canEdit && (
+              <Link
+                href={`/post/${postId}/rediger`}
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-deep-950 hover:bg-mist-50"
+              >
+                <Pencil className="h-4 w-4" aria-hidden />
+                Rediger opslag
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleDelete}
@@ -123,6 +137,7 @@ export default function PostMenu({
               <Trash2 className="h-4 w-4" aria-hidden />
               Slet opslag
             </button>
+            </>
           ) : (
             <>
               <button
