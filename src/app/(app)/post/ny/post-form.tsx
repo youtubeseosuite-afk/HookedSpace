@@ -1,5 +1,5 @@
 // src/app/(app)/post/ny/post-form.tsx
-// OPDATERET (kan skrive opslag i en gruppe). Opslagsformularen: tekst, op til 5 billeder, følelse, sted, tag venner, valgfri fangstdetaljer og synlighed.
+// OPDATERET (forklaring på hvem der kan se opslaget). Opslagsformularen: tekst, op til 5 billeder, følelse, sted, tag venner, valgfri fangstdetaljer og synlighed.
 
 "use client";
 
@@ -20,10 +20,10 @@ type PickedImage = CompressedImage & { id: string; previewUrl: string };
 
 const MAX_IMAGES = 5;
 
-const VISIBILITY: { value: Visibility; label: string; icon: typeof Globe }[] = [
-  { value: "public", label: "Offentlig", icon: Globe },
-  { value: "followers", label: "Følgere", icon: Users },
-  { value: "private", label: "Kun mig", icon: Lock },
+const VISIBILITY: { value: Visibility; label: string; icon: typeof Globe; hint: string }[] = [
+  { value: "public", label: "Offentlig", icon: Globe, hint: "Alle kan se det, også uden login og via delte links" },
+  { value: "followers", label: "Følgere", icon: Users, hint: "Kun dem der følger dig" },
+  { value: "private", label: "Kun mig", icon: Lock, hint: "Kun dig" },
 ];
 
 function Avatar({ name, url, size = "h-10 w-10" }: { name: string; url: string | null; size?: string }) {
@@ -273,6 +273,9 @@ export default function PostForm({
               </button>
             ))}
           </div>
+          )}
+          {!group && (
+            <p className="mt-1 text-xs text-deep-700">{VISIBILITY.find((v) => v.value === visibility)?.hint}</p>
           )}
         </div>
       </div>
