@@ -1,5 +1,5 @@
 // src/app/(app)/auktioner/[id]/page.tsx
-// OPDATERET (Byd og Køb nu). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
+// OPDATERET (beskeder mellem sælger og vinder). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
 // (navne skjult) og sælgeren med Flex og bedømmelser. Kan ses af alle, også gæster.
 
 import type { Metadata } from "next";
@@ -14,6 +14,7 @@ import { LivePrice } from "@/components/auction-live";
 import FlexBadge from "@/components/flex-badge";
 import CancelAuctionButton from "./cancel-button";
 import BidPanel from "./bid-panel";
+import DealChat from "./deal-chat";
 
 type Params = { id: string };
 
@@ -69,11 +70,44 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
   const ended = isEnded(a);
   const buyNowOpen = a.buy_now_price != null && (a.current_price ?? 0) < a.buy_now_price;
 
+  // Solgt: sælger og vinder kan skrive sammen
+  const isWinner = !!userId && userId === a.winner_id;
+  const inDeal = a.status === "sold" && !!userId && (isSeller || isWinner) && !!a.winner_id;
+  let dealOther: { name: string; username: string | null } | null = null;
+  if (inDeal) {
+    if (isSeller) {
+      const { data: w } = await supabase.from("profiles").select("username, display_name").eq("id", a.winner_id!).maybeSingle();
+      dealOther = { name: w?.display_name ?? w?.username ?? "Køberen", username: w?.username ?? null };
+    } else {
+      dealOther = { name: sellerName, username: a.seller?.username ?? null };
+    }
+  }
+
   return (
     <main className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:py-8">
       <Link href="/auktioner" className="inline-flex items-center gap-1 text-sm font-medium text-deep-700 hover:underline">
         <ArrowLeft className="h-4 w-4" aria-hidden /> GrejAuktionen
       </Link>
+
+      {inDeal && dealOther && userId && (
+        <DealChat
+          auctionId={a.id}
+          meId={userId}
+          role={isSeller ? "seller" : "buyer"}
+          other={dealOther}
+          price={a.final_price ?? a.current_price ?? 0}
+        />
+      )}
+
+      {isSeller && a.status === "unsold" && (
+        <p className="rounded-2xl bg-white p-4 text-sm text-deep-900 shadow-sm ring-1 ring-mist-100">
+          Auktionen sluttede uden bud.{" "}
+          <Link href="/auktioner/ny" className="font-semibold underline">
+            Opret den igen
+          </Link>{" "}
+          med en lavere startpris eller flere billeder.
+        </p>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-5">
         {/* Billeder */}
