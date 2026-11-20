@@ -1,5 +1,5 @@
 // src/app/(app)/auktioner/[id]/page.tsx
-// NY FIL. Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
+// OPDATERET (sælger kan trække auktionen tilbage, hvis ingen har budt). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
 // (navne skjult) og sælgeren med Flex og bedømmelser. Kan ses af alle, også gæster.
 
 import type { Metadata } from "next";
@@ -12,6 +12,7 @@ import { categoryLabel, conditionLabel, getAuction, kr } from "@/lib/auctions";
 import { regionLabel } from "@/lib/regions";
 import { LivePrice } from "@/components/auction-live";
 import FlexBadge from "@/components/flex-badge";
+import CancelAuctionButton from "./cancel-button";
 
 type Params = { id: string };
 
@@ -138,7 +139,10 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
           </p>
 
           {isSeller && (
-            <p className="rounded-lg bg-lure-400/20 px-3 py-2 text-sm text-deep-900">Det er din auktion.</p>
+            <div className="space-y-2 rounded-lg bg-lure-400/20 px-3 py-2 text-sm text-deep-900">
+              <p>Det er din auktion.</p>
+              {a.status === "active" && a.bid_count === 0 && <CancelAuctionButton auctionId={a.id} />}
+            </div>
           )}
 
           {/* Sælger */}
