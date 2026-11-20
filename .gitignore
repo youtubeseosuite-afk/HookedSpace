@@ -1,0 +1,6 @@
+# .gitignore
+# NY FIL. Filer der aldrig skal i repoet (bygges eller installeres automatisk).
+node_modules/
+.next/
+next-env.d.ts
+.env*
