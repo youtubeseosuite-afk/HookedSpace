@@ -1,5 +1,5 @@
 // src/app/(app)/auktioner/[id]/page.tsx
-// OPDATERET (sælger kan trække auktionen tilbage, hvis ingen har budt). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
+// OPDATERET (Byd og Køb nu). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
 // (navne skjult) og sælgeren med Flex og bedømmelser. Kan ses af alle, også gæster.
 
 import type { Metadata } from "next";
@@ -8,11 +8,12 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Truck, ThumbsUp, ThumbsDown, Tag, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
-import { categoryLabel, conditionLabel, getAuction, kr } from "@/lib/auctions";
+import { categoryLabel, conditionLabel, getAuction, isEnded, kr, minNextBid } from "@/lib/auctions";
 import { regionLabel } from "@/lib/regions";
 import { LivePrice } from "@/components/auction-live";
 import FlexBadge from "@/components/flex-badge";
 import CancelAuctionButton from "./cancel-button";
+import BidPanel from "./bid-panel";
 
 type Params = { id: string };
 
@@ -65,6 +66,8 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
 
   const sellerName = a.seller?.display_name ?? a.seller?.username ?? "Ukendt";
   const isSeller = userId === a.seller_id;
+  const ended = isEnded(a);
+  const buyNowOpen = a.buy_now_price != null && (a.current_price ?? 0) < a.buy_now_price;
 
   return (
     <main className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:py-8">
@@ -132,6 +135,17 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
               buy_now_price: a.buy_now_price,
             }}
           />
+
+          {!ended && !isSeller && (
+            <BidPanel
+              auctionId={a.id}
+              loggedIn={!!userId}
+              minBid={minNextBid(a)}
+              minIncrement={a.min_increment}
+              buyNowPrice={buyNowOpen ? a.buy_now_price : null}
+              isHighBidder={!!userId && userId === a.high_bidder_id}
+            />
+          )}
 
           <p className="flex items-center gap-1.5 text-xs text-deep-700">
             <CalendarClock className="h-3.5 w-3.5" aria-hidden />

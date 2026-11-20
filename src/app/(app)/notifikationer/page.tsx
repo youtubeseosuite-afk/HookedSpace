@@ -1,10 +1,10 @@
 // src/app/(app)/notifikationer/page.tsx
-// OPDATERET (samme Flex-ikon for alle niveauer). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere og badges).
+// OPDATERET (notifikationer fra GrejAuktionen). Liste over notifikationer (reaktioner, kommentarer, tags, delinger, nye følgere, badges og auktioner).
 // Ulæste markeres med en prik og bliver markeret som læst, når siden åbnes.
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Bell, MessageCircle, UserPlus, Tag, Repeat2, Users } from "lucide-react";
+import { Bell, MessageCircle, UserPlus, Tag, Repeat2, Users, Gavel } from "lucide-react";
 import { requireProfile, type CurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import BadgeIcon, { hasBadgeImage } from "@/components/badge-icon";
@@ -25,7 +25,15 @@ type NotificationType =
   | "challenge"
   | "group_request"
   | "group_approved"
-  | "flex_level";
+  | "flex_level"
+  | "auction_outbid"
+  | "auction_won"
+  | "auction_sold"
+  | "auction_unsold"
+  | "auction_message"
+  | "auction_rating";
+
+type AuctionType = Extract<NotificationType, `auction_${string}`>;
 
 type Row = {
   id: string;
@@ -41,9 +49,10 @@ type Row = {
   badge: { name: string; emoji: string; description: string } | null;
   challenge: { title: string; emoji: string; description: string } | null;
   group: { slug: string; name: string } | null;
+  auction: { id: string; title: string; final_price: number | null; current_price: number | null } | null;
 };
 
-const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_request" | "group_approved" | "flex_level">, string> = {
+const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_request" | "group_approved" | "flex_level" | AuctionType>, string> = {
   reaction: "gav dit opslag et Knæk og bræk",
   comment: "kommenterede dit opslag",
   tag: "taggede dig i et opslag",
@@ -54,6 +63,12 @@ const TEXT: Record<Exclude<NotificationType, "badge" | "challenge" | "group_requ
 function hrefFor(n: Row, me: CurrentProfile) {
   if (n.type === "badge") return `/u/${me.username}`;
   if (n.type === "flex_level") return "/flex";
+  if (n.type.startsWith("auction_")) {
+    if (!n.auction) return "/auktioner";
+    return n.type === "auction_message" || n.type === "auction_won" || n.type === "auction_sold"
+      ? `/auktioner/${n.auction.id}#handel`
+      : `/auktioner/${n.auction.id}`;
+  }
   if (n.type === "challenge") return "/feed";
   if (n.type === "group_request") return n.group ? `/g/${n.group.slug}/admin` : "/grupper";
   if (n.type === "group_approved") return n.group ? `/g/${n.group.slug}` : "/grupper";
@@ -100,6 +115,12 @@ function TypeIcon({ type }: { type: NotificationType }) {
     case "badge":
     case "challenge":
     case "flex_level":
+    case "auction_outbid":
+    case "auction_won":
+    case "auction_sold":
+    case "auction_unsold":
+    case "auction_message":
+    case "auction_rating":
       return null;
   }
 }
@@ -132,7 +153,8 @@ export default async function NotifikationerPage() {
        comment:post_comments!notifications_comment_id_fkey ( body ),
        badge:badges!notifications_badge_id_fkey ( name, emoji, description ),
        challenge:challenges!notifications_challenge_id_fkey ( title, emoji, description ),
-       group:groups!notifications_group_id_fkey ( slug, name )`
+       group:groups!notifications_group_id_fkey ( slug, name ),
+       auction:auctions!notifications_auction_id_fkey ( id, title, final_price, current_price )`
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -189,6 +211,49 @@ export default async function NotifikationerPage() {
                         Stangen bøjer! Du har nået Flex-niveau {lvl.level}:{" "}
                         <span className="font-semibold text-deep-950">{lvl.name}</span>
                       </span>
+                      <span className={`mt-0.5 block text-xs ${unread ? "font-semibold text-lure-500" : "text-deep-700"}`}>
+                        {timeAgo(n.created_at)}
+                      </span>
+                    </span>
+                    {unread && <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-lure-400" aria-label="Ulæst" />}
+                  </Link>
+                </li>
+              );
+            }
+
+            if (n.type.startsWith("auction_")) {
+              const title = n.auction?.title ?? "en auktion";
+              const price = (n.auction?.final_price ?? n.auction?.current_price ?? 0).toLocaleString("da-DK");
+              const good = n.type === "auction_won" || n.type === "auction_sold";
+              const text =
+                n.type === "auction_outbid" ? (
+                  <>Du er blevet overbudt på <b className="text-deep-950">{title}</b>. Byd igen, før auktionen slutter.</>
+                ) : n.type === "auction_won" ? (
+                  <>Du vandt <b className="text-deep-950">{title}</b> for {price} kr. Skriv til sælgeren og aftal betaling og afhentning.</>
+                ) : n.type === "auction_sold" ? (
+                  <><b className="text-deep-950">{title}</b> er solgt for {price} kr. Skriv til køberen og aftal betaling og afhentning.</>
+                ) : n.type === "auction_unsold" ? (
+                  <><b className="text-deep-950">{title}</b> sluttede uden bud.</>
+                ) : n.type === "auction_message" ? (
+                  <><b className="text-deep-950">{name}</b> har skrevet til dig om <b className="text-deep-950">{title}</b>.</>
+                ) : (
+                  <><b className="text-deep-950">{name}</b> har bedømt jeres handel om <b className="text-deep-950">{title}</b>.</>
+                );
+              return (
+                <li key={n.id}>
+                  <Link
+                    href={href}
+                    className={`flex items-start gap-3 p-4 transition hover:bg-mist-50 ${unread ? "bg-lure-400/10" : ""}`}
+                  >
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                        good ? "bg-lure-400 text-deep-950" : "bg-deep-900 text-lure-400"
+                      }`}
+                    >
+                      {n.type === "auction_message" ? <MessageCircle className="h-5 w-5" aria-hidden /> : <Gavel className="h-5 w-5" aria-hidden />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm text-deep-900">{text}</span>
                       <span className={`mt-0.5 block text-xs ${unread ? "font-semibold text-lure-500" : "text-deep-700"}`}>
                         {timeAgo(n.created_at)}
                       </span>
