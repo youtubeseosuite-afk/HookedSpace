@@ -1,5 +1,5 @@
 // src/app/admin/rapporter/page.tsx
-// NY FIL. Admin: rapporter fra brugerne. Viser det rapporterede indhold (også private opslag med billeder),
+// OPDATERET (rapporter om auktioner). Admin: rapporter fra brugerne. Viser det rapporterede indhold (også private opslag med billeder),
 // hvem der rapporterede, og hvor mange rapporter indholdet har. Filtrér på status og type.
 
 import type { Metadata } from "next";
@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Lock, Users } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { postImageUrl } from "@/lib/posts";
+import { auctionImageUrl } from "@/lib/auctions";
 import { REPORT_REASON_LABEL, REPORT_STATUS_LABEL, REPORT_TARGET_LABEL, dkDateTime } from "../format";
 import ReportActions from "./report-actions";
 
@@ -27,6 +28,7 @@ const TYPES = [
   { key: "kommentarer", label: "Kommentarer", value: "comment" },
   { key: "profiler", label: "Profiler", value: "user" },
   { key: "grupper", label: "Grupper", value: "group" },
+  { key: "auktioner", label: "Auktioner", value: "auction" },
 ] as const;
 
 const VISIBILITY_LABEL: Record<string, string> = { public: "Offentlig", followers: "Kun følgere", private: "Privat" };
@@ -34,7 +36,7 @@ const VISIBILITY_LABEL: Record<string, string> = { public: "Offentlig", follower
 type Report = {
   id: string;
   reporter_id: string | null;
-  target_type: "post" | "comment" | "user" | "group";
+  target_type: "post" | "comment" | "user" | "group" | "auction";
   target_id: string;
   target_user_id: string | null;
   reason: string;
@@ -58,6 +60,16 @@ type PostT = {
   post_images: { storage_path: string; position: number }[] | null;
 };
 type CommentT = { id: string; body: string; created_at: string; post_id: string; post: { body: string | null } | null };
+type AuctionT = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  bid_count: number;
+  current_price: number | null;
+  start_price: number;
+  auction_images: { storage_path: string; position: number }[] | null;
+};
 type GroupT = { id: string; name: string; slug: string; description: string | null; privacy: string; member_count: number };
 
 type SP = { status?: string; type?: string; side?: string };
@@ -119,6 +131,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
   const postIds = idsOf("post");
   const commentIds = idsOf("comment");
   const groupIds = idsOf("group");
+  const auctionIds = idsOf("auction");
   const userTargetIds = idsOf("user");
   const personIds = [
     ...new Set(
@@ -129,7 +142,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
   const targetUserIds = [...new Set(reports.map((r) => r.target_user_id).filter((x): x is string => Boolean(x)))];
 
   const empty = { data: [] as never[] };
-  const [postsRes, commentsRes, groupsRes, peopleRes, bansRes, siblingsRes] = await Promise.all([
+  const [postsRes, commentsRes, groupsRes, peopleRes, bansRes, siblingsRes, auctionsRes] = await Promise.all([
     postIds.length
       ? db
           .from("posts")
@@ -147,11 +160,18 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
       ? db.from("user_bans").select("user_id, banned_until").in("user_id", targetUserIds)
       : empty,
     targetIds.length ? db.from("reports").select("target_id, status").in("target_id", targetIds) : empty,
+    auctionIds.length
+      ? db
+          .from("auctions")
+          .select("id, title, description, status, bid_count, current_price, start_price, auction_images ( storage_path, position )")
+          .in("id", auctionIds)
+      : empty,
   ]);
 
   const posts = new Map(((postsRes.data ?? []) as unknown as PostT[]).map((p) => [p.id, p]));
   const comments = new Map(((commentsRes.data ?? []) as unknown as CommentT[]).map((c) => [c.id, c]));
   const groups = new Map(((groupsRes.data ?? []) as GroupT[]).map((g) => [g.id, g]));
+  const auctions = new Map(((auctionsRes.data ?? []) as unknown as AuctionT[]).map((a) => [a.id, a]));
   const people = new Map(((peopleRes.data ?? []) as Person[]).map((p) => [p.id, p]));
   const now = Date.now();
   const banned = new Set(
@@ -212,9 +232,11 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
             const comment = r.target_type === "comment" ? comments.get(r.target_id) : undefined;
             const group = r.target_type === "group" ? groups.get(r.target_id) : undefined;
             const userTarget = r.target_type === "user" ? people.get(r.target_id) : undefined;
-            const exists = Boolean(post || comment || group || userTarget);
+            const auction = r.target_type === "auction" ? auctions.get(r.target_id) : undefined;
+            const exists = Boolean(post || comment || group || userTarget || auction);
             const total = totalByTarget.get(r.target_id) ?? 1;
-            const targetLabel = r.target_type === "post" ? "opslaget" : r.target_type === "comment" ? "kommentaren" : "gruppen";
+            const targetLabel =
+              r.target_type === "post" ? "opslaget" : r.target_type === "comment" ? "kommentaren" : r.target_type === "auction" ? "auktionen" : "gruppen";
             const images = [...(post?.post_images ?? [])].sort((a, b) => a.position - b.position);
 
             return (
@@ -253,7 +275,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
 
                 {/* Det rapporterede */}
                 <div className="mt-3 rounded-xl bg-mist-50 p-3 ring-1 ring-mist-100">
-                  {r.target_type !== "user" && r.target_type !== "group" && (
+                  {r.target_type !== "user" && r.target_type !== "group" && r.target_type !== "auction" && (
                     <p className="mb-1 text-xs text-deep-700">
                       Skrevet af <PersonLink p={people.get(r.target_user_id ?? "")} id={r.target_user_id} />
                       {r.target_user_id && banned.has(r.target_user_id) && <span className="ml-1 font-semibold text-red-700">(bortvist)</span>}
@@ -310,6 +332,29 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
                           Til opslaget: {comment.post.body}
                         </p>
                       )}
+                    </div>
+                  )}
+
+                  {auction && (
+                    <div className="flex gap-3">
+                      {(() => {
+                        const first = [...(auction.auction_images ?? [])].sort((x, y) => x.position - y.position)[0];
+                        return first ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={auctionImageUrl(first.storage_path)} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
+                        ) : null;
+                      })()}
+                      <div className="min-w-0 space-y-1">
+                        <Link href={`/auktioner/${auction.id}`} className="font-semibold text-deep-950 hover:underline">
+                          {auction.title}
+                        </Link>
+                        <p className="text-xs text-deep-700">
+                          {auction.status === "active" ? "Aktiv" : auction.status === "sold" ? "Solgt" : "Uden bud"} ·{" "}
+                          {(auction.current_price ?? auction.start_price).toLocaleString("da-DK")} kr. · {auction.bid_count} bud · sælger{" "}
+                          <PersonLink p={people.get(r.target_user_id ?? "")} id={r.target_user_id} />
+                        </p>
+                        {auction.description && <p className="line-clamp-3 text-sm text-deep-950">{auction.description}</p>}
+                      </div>
                     </div>
                   )}
 

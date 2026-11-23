@@ -1,10 +1,11 @@
 // src/components/guest-shell.tsx
-// NY FIL. Rammen for gæster (ikke logget ind): topbar med Log ind / Opret profil,
+// OPDATERET (højre sidebar med de nyeste auktioner). Rammen for gæster (ikke logget ind): topbar med Log ind / Opret profil,
 // og en fast bjælke i bunden der opfordrer til at oprette en profil. Kun gæster ser den.
 
 import Link from "next/link";
 import { LogoBadge } from "@/components/logo";
 import { JoinPromptHost } from "@/components/join-prompt";
+import RightRail from "@/components/right-rail";
 
 export function GuestCtaBar() {
   return (
@@ -25,7 +26,7 @@ export function GuestCtaBar() {
   );
 }
 
-export default function GuestShell({ children }: { children: React.ReactNode }) {
+export default function GuestShell({ children, rightRail }: { children: React.ReactNode; rightRail?: React.ReactNode }) {
   return (
     <div className="min-h-dvh pb-24">
       <header className="sticky top-0 z-40 bg-deep-900 text-mist-50 shadow">
@@ -35,6 +36,9 @@ export default function GuestShell({ children }: { children: React.ReactNode }) 
             FiskoMan
           </Link>
           <nav className="flex items-center gap-1">
+            <Link href="/auktioner" className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-deep-800 sm:block">
+              GrejAuktionen
+            </Link>
             <Link href="/login" className="rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-deep-800">
               Log ind
             </Link>
@@ -47,7 +51,9 @@ export default function GuestShell({ children }: { children: React.ReactNode }) 
           </nav>
         </div>
       </header>
-      {children}
+      <RightRail rail={rightRail} topOffset>
+        {children}
+      </RightRail>
       <GuestCtaBar />
       <JoinPromptHost />
     </div>

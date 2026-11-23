@@ -6,9 +6,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, HelpCircle, type LucideIcon } from "lucide-react";
+import { Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, HelpCircle, Gavel, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoBadge } from "@/components/logo";
+import RightRail from "@/components/right-rail";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 
@@ -41,11 +42,13 @@ export default function AppShell({
   username,
   displayName,
   avatarUrl,
+  rightRail,
   children,
 }: {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  rightRail?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -87,6 +90,7 @@ export default function AppShell({
     { href: "/post/ny", label: "Ny Post", icon: PlusCircle },
     { href: NOTIFICATIONS_PATH, label: "Notifikationer", icon: Bell, badge: unread },
     { href: "/grupper", label: "Grupper", icon: Users },
+    { href: "/auktioner", label: "GrejAuktionen", icon: Gavel },
     { href: "/opdag", label: "Find fiskere", icon: Search },
     { href: `/u/${username}`, label: "Min profil", icon: User },
     { href: "/indstillinger", label: "Indstillinger", icon: Settings },
@@ -219,7 +223,9 @@ export default function AppShell({
       </aside>
 
       {/* ---------- Indhold ---------- */}
-      <div className="md:pl-16">{children}</div>
+      <div className="md:pl-16">
+        <RightRail rail={rightRail}>{children}</RightRail>
+      </div>
     </div>
   );
 }

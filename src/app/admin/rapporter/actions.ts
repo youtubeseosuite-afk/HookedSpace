@@ -1,11 +1,12 @@
 // src/app/admin/rapporter/actions.ts
-// NY FIL. Server actions til rapporter: afvis, markér som løst, og slet det rapporterede indhold
+// OPDATERET (slet rapporteret auktion). Server actions til rapporter: afvis, markér som løst, og slet det rapporterede indhold
 // (opslag med billeder, kommentar eller gruppe). Sletning lukker alle åbne rapporter om samme indhold.
 
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient, requireSiteAdmin } from "@/lib/supabase/admin";
+import { removeAuction } from "@/lib/auction-admin";
 
 export type ReportActionState = { ok?: string; error?: string };
 
@@ -69,6 +70,9 @@ export async function deleteReportedContent(_prev: ReportActionState, formData: 
   } else if (target_type === "comment") {
     const { error } = await db.from("post_comments").delete().eq("id", target_id);
     if (error) return { error: "Kommentaren kunne ikke slettes." };
+  } else if (target_type === "auction") {
+    const err = await removeAuction(target_id);
+    if (err) return { error: err };
   } else if (target_type === "group") {
     // Gruppens opslag bliver private og bliver liggende hos forfatterne
     const { error } = await db.from("groups").delete().eq("id", target_id);
@@ -77,7 +81,8 @@ export async function deleteReportedContent(_prev: ReportActionState, formData: 
     return { error: "En profil kan ikke slettes herfra. Bortvis brugeren i stedet." };
   }
 
-  const label = target_type === "post" ? "Opslaget" : target_type === "comment" ? "Kommentaren" : "Gruppen";
+  const label =
+    target_type === "post" ? "Opslaget" : target_type === "comment" ? "Kommentaren" : target_type === "auction" ? "Auktionen" : "Gruppen";
   await db
     .from("reports")
     .update({

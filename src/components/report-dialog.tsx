@@ -1,5 +1,5 @@
 // src/components/report-dialog.tsx
-// NY FIL. Vindue hvor man rapporterer et opslag, en kommentar, en profil eller en gruppe.
+// OPDATERET (auktioner kan rapporteres). Vindue hvor man rapporterer et opslag, en kommentar, en profil eller en gruppe.
 // Rapporten går til platformens admins (/admin/rapporter). Den der rapporteres, får ikke at vide hvem.
 
 "use client";
@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Flag, Loader2, X, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export type ReportTarget = "post" | "comment" | "user" | "group";
+export type ReportTarget = "post" | "comment" | "user" | "group" | "auction";
 
 const REASONS = [
   { key: "spam", label: "Spam eller reklame" },
@@ -24,6 +24,7 @@ const TITLE: Record<ReportTarget, string> = {
   comment: "Rapportér kommentar",
   user: "Rapportér profil",
   group: "Rapportér gruppe",
+  auction: "Rapportér auktion",
 };
 
 export default function ReportDialog({
