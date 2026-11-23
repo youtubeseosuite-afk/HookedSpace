@@ -1,5 +1,5 @@
 // src/components/guest-shell.tsx
-// NY FIL. Rammen for gæster (ikke logget ind): topbar med Log ind / Opret profil,
+// OPDATERET (link til GrejAuktionen). Rammen for gæster (ikke logget ind): topbar med Log ind / Opret profil,
 // og en fast bjælke i bunden der opfordrer til at oprette en profil. Kun gæster ser den.
 
 import Link from "next/link";
@@ -35,6 +35,9 @@ export default function GuestShell({ children }: { children: React.ReactNode }) 
             FiskoMan
           </Link>
           <nav className="flex items-center gap-1">
+            <Link href="/auktioner" className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-deep-800 sm:block">
+              GrejAuktionen
+            </Link>
             <Link href="/login" className="rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-deep-800">
               Log ind
             </Link>
