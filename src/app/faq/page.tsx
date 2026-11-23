@@ -1,5 +1,5 @@
 // src/app/faq/page.tsx
-// OPDATERET (Offentlig betyder også gæster uden login). Ofte stillede spørgsmål. Offentlig side. Linker videre til Flex-forklaringen (/flex) og reglerne (/regler).
+// OPDATERET (spørgsmål om GrejAuktionen). Ofte stillede spørgsmål. Offentlig side. Linker videre til Flex-forklaringen (/flex) og reglerne (/regler).
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -117,6 +117,36 @@ const SECTIONS: { title: string; items: QA[] }[] = [
             <A href="/flex">Læs hele forklaringen og se, hvem der har mest Flex</A>.
           </>
         ),
+      },
+    ],
+  },
+  {
+    title: "GrejAuktionen",
+    items: [
+      {
+        q: "Hvad er GrejAuktionen?",
+        a: (
+          <>
+            Et sted, hvor medlemmer kan sælge brugt fiskegrej på auktion. Alle kan kigge med, men du skal have en profil for at byde eller
+            sælge. <A href="/auktioner">Se auktionerne</A>.
+          </>
+        ),
+      },
+      {
+        q: "Hvordan sælger jeg?",
+        a: "Tryk på Sælg dit grej, tilføj billeder, beskrivelse, startpris og hvor længe auktionen skal køre (3-10 dage). Du kan også sætte en Køb nu-pris. Du kan trække auktionen tilbage, så længe ingen har budt.",
+      },
+      {
+        q: "Hvordan byder jeg, og er buddet bindende?",
+        a: "Skriv dit bud på auktionen og bekræft. Ja, buddet er bindende: vinder du, forpligter du dig til at købe. Kommer der et bud i de sidste 2 minutter, forlænges auktionen, så alle kan nå at svare.",
+      },
+      {
+        q: "Hvordan betaler jeg?",
+        a: "FiskoMan håndterer ingen penge. Når auktionen er slut, kan køber og sælger skrive sammen på auktionen og aftale betaling (fx MobilePay) og afhentning eller fragt. Mød gerne op og se grejet, før du betaler.",
+      },
+      {
+        q: "Hvad er bedømmelser?",
+        a: "Efter en handel kan køber og sælger give hinanden en 👍 eller 👎 med en kort kommentar. Bedømmelserne står på profilen under Auktioner, og en 👍 giver 3 Flex.",
       },
     ],
   },

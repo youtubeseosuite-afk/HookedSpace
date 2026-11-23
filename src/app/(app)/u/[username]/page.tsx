@@ -1,5 +1,5 @@
 // src/app/(app)/u/[username]/page.tsx
-// OPDATERET (gæster kan se profilen; Følg beder dem oprette en profil). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
+// OPDATERET (fanen Auktioner med GrejAuktionen og bedømmelser). Profilside: navn, by, erfaring, bio, tællere, følg-knap,
 // fanen Opslag (badges, fiskepas, trofævæg, opslag) og fanen Billeder (galleri med alle brugerens billeder).
 
 import type { Metadata } from "next";
@@ -16,6 +16,7 @@ import ProfileMenu from "./profile-menu";
 import FishingPass, { type SpeciesItem, type SpeciesStat } from "@/components/fishing-pass";
 import BadgeList, { type BadgeItem } from "@/components/badge-list";
 import PhotoGallery, { type GalleryImage } from "@/components/photo-gallery";
+import ProfileAuctions from "@/components/profile-auctions";
 import { postImageUrl } from "@/lib/posts";
 
 const LEVEL_LABEL: Record<string, string> = {
@@ -86,7 +87,7 @@ export default async function ProfilePage({
   const { username } = await params;
   const { foer, fane } = await searchParams;
   const before = foer && !Number.isNaN(Date.parse(foer)) ? foer : undefined;
-  const tab: "opslag" | "billeder" = fane === "billeder" ? "billeder" : "opslag";
+  const tab: "opslag" | "billeder" | "auktioner" = fane === "billeder" ? "billeder" : fane === "auktioner" ? "auktioner" : "opslag";
   const showExtras = tab === "opslag" && !before;
 
   const supabase = await createClient();
@@ -179,6 +180,12 @@ export default async function ProfilePage({
     ? `/u/${user.username}?fane=billeder&foer=${encodeURIComponent(galleryPage[galleryPage.length - 1].created_at)}`
     : null;
   const imageCount = imageCountRes.count ?? 0;
+  const { count: auctionCount } = await supabase
+    .from("auctions")
+    .select("id", { count: "exact", head: true })
+    .eq("seller_id", user.id)
+    .eq("status", "active")
+    .gt("ends_at", new Date().toISOString());
 
   const iFollow = !!iFollowRes.data;
   const followsMe = !!followsMeRes.data;
@@ -279,6 +286,7 @@ export default async function ProfilePage({
           [
             { key: "opslag", label: "Opslag", href: `/u/${user.username}` },
             { key: "billeder", label: "Billeder", href: `/u/${user.username}?fane=billeder`, count: imageCount },
+            { key: "auktioner", label: "Auktioner", href: `/u/${user.username}?fane=auktioner`, count: auctionCount ?? 0 },
           ] as const
         ).map((t) => (
           <Link
@@ -300,6 +308,8 @@ export default async function ProfilePage({
           </Link>
         ))}
       </nav>
+
+      {tab === "auktioner" && <ProfileAuctions userId={user.id} name={name} isMe={isMe} />}
 
       {tab === "billeder" && (
         <PhotoGallery
