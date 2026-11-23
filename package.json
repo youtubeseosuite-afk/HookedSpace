@@ -1,5 +1,5 @@
 {
-  "//": "package.json — NY FIL. Afhængigheder og scripts til HookedSpace (Next.js 16, React 19, Tailwind v4, Supabase).",
+  "//": "package.json — OPDATERET (Next.js 16.4.6 med sikkerhedsrettelse). Afhængigheder og scripts til HookedSpace (Next.js 16, React 19, Tailwind v4, Supabase).",
   "name": "hookedspace",
   "version": "0.1.0",
   "private": true,
@@ -12,7 +12,7 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.57.0",
-    "next": "16.4.1",
+    "next": "16.4.6",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
