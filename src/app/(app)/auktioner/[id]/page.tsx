@@ -1,5 +1,5 @@
 // src/app/(app)/auktioner/[id]/page.tsx
-// OPDATERET (beskeder mellem sælger og vinder). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
+// OPDATERET (bedøm handlen efter salg). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
 // (navne skjult) og sælgeren med Flex og bedømmelser. Kan ses af alle, også gæster.
 
 import type { Metadata } from "next";
@@ -15,6 +15,7 @@ import FlexBadge from "@/components/flex-badge";
 import CancelAuctionButton from "./cancel-button";
 import BidPanel from "./bid-panel";
 import DealChat from "./deal-chat";
+import RateDeal from "./rate-deal";
 
 type Params = { id: string };
 
@@ -83,6 +84,17 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
     }
   }
 
+  // Bedømmelser af denne handel (hvem har bedømt hvem)
+  let myRating: { positive: boolean; comment: string | null } | null = null;
+  let theirRating: { positive: boolean; comment: string | null } | null = null;
+  if (inDeal && userId) {
+    const { data: rs } = await supabase.from("auction_ratings").select("rater_id, positive, comment").eq("auction_id", a.id);
+    for (const r of rs ?? []) {
+      if (r.rater_id === userId) myRating = { positive: r.positive, comment: r.comment };
+      else theirRating = { positive: r.positive, comment: r.comment };
+    }
+  }
+
   return (
     <main className="mx-auto max-w-5xl space-y-4 px-4 py-6 sm:py-8">
       <Link href="/auktioner" className="inline-flex items-center gap-1 text-sm font-medium text-deep-700 hover:underline">
@@ -97,6 +109,10 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
           other={dealOther}
           price={a.final_price ?? a.current_price ?? 0}
         />
+      )}
+
+      {inDeal && dealOther && userId && (
+        <RateDeal auctionId={a.id} meId={userId} otherName={dealOther.name} myRating={myRating} theirRating={theirRating} />
       )}
 
       {isSeller && a.status === "unsold" && (

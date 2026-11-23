@@ -1,11 +1,11 @@
 // src/app/regler/page.tsx
-// OPDATERET (nyt navn: FiskoMan). Generelle regler for FiskoMan. Offentlig side. Ret datoen i LAST_UPDATED, når reglerne ændres.
+// OPDATERET (regler for GrejAuktionen). Generelle regler for FiskoMan. Offentlig side. Ret datoen i LAST_UPDATED, når reglerne ændres.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import InfoPage from "@/components/info-page";
 
-const LAST_UPDATED = "31. oktober 2026";
+const LAST_UPDATED = "23. november 2026";
 
 export const metadata: Metadata = {
   title: "Regler",
@@ -63,7 +63,18 @@ const RULES: { title: string; points: string[] }[] = [
     ],
   },
   {
-    title: "7. Grupper",
+    title: "7. GrejAuktionen",
+    points: [
+      "Sælg kun grej, du selv ejer, og beskriv det ærligt, også fejl og mangler.",
+      "Et bud er bindende. Vinder du, skal du købe. Sælger du, skal du sælge til vinderen.",
+      "Forbudt at sælge: fredede eller levende dyr og levende agn, ulovlige redskaber (fx garn uden tilladelse), våben, stjålne varer og kopivarer.",
+      "Byd ikke på egne auktioner, heller ikke med en anden profil, for at presse prisen op.",
+      "FiskoMan er ikke part i handlen og håndterer ingen penge. Køber og sælger aftaler selv betaling og afhentning og står selv for handlen.",
+      "Bedøm hinanden ærligt efter handlen.",
+    ],
+  },
+  {
+    title: "8. Grupper",
     points: [
       "Gruppens admins kan lave ekstra regler for deres gruppe. Dem skal du også følge.",
       "Reglerne her gælder altid, også i private grupper.",
