@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { Home, PlusCircle, Search, User, Users, Settings, LogOut, Menu, X, Bell, HelpCircle, Gavel, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LogoBadge } from "@/components/logo";
+import RightRail from "@/components/right-rail";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; badge?: number };
 
@@ -41,11 +42,13 @@ export default function AppShell({
   username,
   displayName,
   avatarUrl,
+  rightRail,
   children,
 }: {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  rightRail?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -220,7 +223,9 @@ export default function AppShell({
       </aside>
 
       {/* ---------- Indhold ---------- */}
-      <div className="md:pl-16">{children}</div>
+      <div className="md:pl-16">
+        <RightRail rail={rightRail}>{children}</RightRail>
+      </div>
     </div>
   );
 }

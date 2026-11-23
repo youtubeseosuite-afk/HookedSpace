@@ -1,10 +1,11 @@
 // src/components/guest-shell.tsx
-// OPDATERET (link til GrejAuktionen). Rammen for gæster (ikke logget ind): topbar med Log ind / Opret profil,
+// OPDATERET (højre sidebar med de nyeste auktioner). Rammen for gæster (ikke logget ind): topbar med Log ind / Opret profil,
 // og en fast bjælke i bunden der opfordrer til at oprette en profil. Kun gæster ser den.
 
 import Link from "next/link";
 import { LogoBadge } from "@/components/logo";
 import { JoinPromptHost } from "@/components/join-prompt";
+import RightRail from "@/components/right-rail";
 
 export function GuestCtaBar() {
   return (
@@ -25,7 +26,7 @@ export function GuestCtaBar() {
   );
 }
 
-export default function GuestShell({ children }: { children: React.ReactNode }) {
+export default function GuestShell({ children, rightRail }: { children: React.ReactNode; rightRail?: React.ReactNode }) {
   return (
     <div className="min-h-dvh pb-24">
       <header className="sticky top-0 z-40 bg-deep-900 text-mist-50 shadow">
@@ -50,7 +51,9 @@ export default function GuestShell({ children }: { children: React.ReactNode }) 
           </nav>
         </div>
       </header>
-      {children}
+      <RightRail rail={rightRail} topOffset>
+        {children}
+      </RightRail>
       <GuestCtaBar />
       <JoinPromptHost />
     </div>
