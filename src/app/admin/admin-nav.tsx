@@ -1,16 +1,17 @@
 // src/app/admin/admin-nav.tsx
-// NY FIL. Menu i admin-siden. Fremhæver den side, du står på.
+// OPDATERET (menupunktet Auktioner). Menu i admin-siden. Fremhæver den side, du står på.
 
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Flag, Ban } from "lucide-react";
+import { LayoutDashboard, Users, Flag, Ban, Gavel } from "lucide-react";
 
 const ITEMS = [
   { href: "/admin", label: "Overblik", icon: LayoutDashboard, exact: true },
   { href: "/admin/medlemmer", label: "Medlemmer", icon: Users },
   { href: "/admin/rapporter", label: "Rapporter", icon: Flag },
+  { href: "/admin/auktioner", label: "Auktioner", icon: Gavel },
   { href: "/admin/bans", label: "Bans og blokeringer", icon: Ban },
 ];
 

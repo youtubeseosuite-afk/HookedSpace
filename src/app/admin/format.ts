@@ -1,5 +1,5 @@
 // src/app/admin/format.ts
-// NY FIL. Fælles tekster og datoformat til admin-siderne.
+// OPDATERET (rapporter om auktioner). Fælles tekster og datoformat til admin-siderne.
 
 export const REPORT_REASON_LABEL: Record<string, string> = {
   spam: "Spam",
@@ -15,6 +15,7 @@ export const REPORT_TARGET_LABEL: Record<string, string> = {
   comment: "kommentar",
   user: "profil",
   group: "gruppe",
+  auction: "auktion",
 };
 
 export const REPORT_STATUS_LABEL: Record<string, string> = {

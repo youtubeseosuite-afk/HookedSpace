@@ -1,5 +1,5 @@
 // src/app/(app)/auktioner/[id]/page.tsx
-// OPDATERET (bedøm handlen efter salg). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
+// OPDATERET (rapportér auktion). Én auktion på GrejAuktionen: billeder, beskrivelse, pris der opdateres live, budhistorik
 // (navne skjult) og sælgeren med Flex og bedømmelser. Kan ses af alle, også gæster.
 
 import type { Metadata } from "next";
@@ -16,6 +16,7 @@ import CancelAuctionButton from "./cancel-button";
 import BidPanel from "./bid-panel";
 import DealChat from "./deal-chat";
 import RateDeal from "./rate-deal";
+import ReportButton from "@/components/report-button";
 
 type Params = { id: string };
 
@@ -241,6 +242,11 @@ export default async function AuctionPage({ params }: { params: Promise<Params> 
               </div>
             </div>
           </div>
+          {userId && !isSeller && (
+            <div className="flex justify-end">
+              <ReportButton targetType="auction" targetId={a.id} label="Rapportér auktion" />
+            </div>
+          )}
         </section>
       </div>
 
